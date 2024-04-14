@@ -1,0 +1,23 @@
+{
+  "bot": {
+    "token": "",
+    "admin_ids": [],
+    "parse_mode": "html"
+  },
+  "logging": {
+    "sink": "../../logs/debug.log",
+    "serialize": false,
+    "rotation": "50 MB",
+    "compression": "zip",
+    "format": "{time} {level} {message}",
+    "level": "DEBUG"
+  },
+  "db": {
+    "drivername": "psycopg",
+    "user": "",
+    "password": "",
+    "host": "localhost",
+    "port": "5432",
+    "database": "taxibot"
+  }
+}
