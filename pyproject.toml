@@ -10,6 +10,7 @@ python = "^3.11"
 aiogram = "^3.4.1"
 loguru = "^0.7.2"
 pydantic-settings = "^2.2.1"
+sqlalchemy = "^2.0.29"
 
 
 [build-system]
