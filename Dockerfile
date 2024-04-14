@@ -21,6 +21,7 @@ ENV VIRTUAL_ENV=/app/.venv \
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-COPY taxi_bot ./taxi_bot
+WORKDIR /app
+COPY bot ./bot
 
-ENTRYPOINT ["python", "taxi_bot/main.py"]
+ENTRYPOINT ["python", "bot/main.py"]
