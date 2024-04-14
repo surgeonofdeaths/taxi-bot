@@ -4,6 +4,9 @@ from aiogram.client.bot import DefaultBotProperties
 from config.config import config
 from loguru import logger
 
+from middlewares import DbSessionMiddleware
+from db import sessionmaker
+
 import asyncio
 
 
@@ -22,6 +25,7 @@ async def main():
         default=DefaultBotProperties(parse_mode=config.bot.parse_mode),
     )
     dp: Dispatcher = Dispatcher()
+    dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))
 
     dp.include_router(handler.router)
     logger.info("Bot started successfuly!")
