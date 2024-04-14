@@ -1,0 +1,25 @@
+services:
+  bot:
+    build:
+      context: .
+    restart: on-failure
+    stop_signal: SIGINT
+    depends_on:
+      - db
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    container_name: db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - '5432:5432'
+    volumes:
+      - "/opt/postgresql/data:/var/lib/postgresql/data"
+volumes:
+  db:
+    driver: local
