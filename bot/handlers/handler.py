@@ -1,10 +1,15 @@
 from aiogram import Router
 from aiogram.types import Message
 
+from aiogram.filters import Command
 from loguru import logger
 
-
 router = Router()
+
+
+@router.message(Command(commands=["start"]))
+async def process_start_command(message: Message):
+    await message.answer("Добро пожаловать в бота для заказа такси!")
 
 
 @router.message()
