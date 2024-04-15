@@ -5,7 +5,7 @@ from config.config import config
 from loguru import logger
 
 from middlewares import DbSessionMiddleware
-from db import sessionmaker
+from db.database import sessionmaker
 
 import asyncio
 
