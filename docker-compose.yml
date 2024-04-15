@@ -10,12 +10,18 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     container_name: db
+    user: postgres
     env_file:
       - .env
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_NAME}
+      PG_USER: ${DB_USER}
+      PG_PASSWORD: ${DB_PASS}
+      PG_DB: ${DB_NAME}
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U postgres"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
     ports:
       - '5432:5432'
     volumes:
