@@ -2,13 +2,15 @@
 # from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from config.config import config
+import os
+
+current_working_directory = os.getcwd()
+print(current_working_directory)
+
+from config.config import settings
+from loguru import logger
 
 
-url = f"postgresql+{config.db.drivername}://" \
-      f"{config.db.user}:{config.db.password}@" \
-      f"{config.db.host}:{config.db.port}" \
-      f"/{config.db.database}"
-print(url)
-engine = create_async_engine(url=url, echo=True)
+logger.info(f"DB url: {settings.db.url}")
+engine = create_async_engine(url=settings.db.url, echo=True)
 sessionmaker = async_sessionmaker(engine, expire_on_commit=False)

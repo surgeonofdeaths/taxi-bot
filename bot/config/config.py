@@ -23,6 +23,7 @@ class DatabaseSettings(BaseSettings):
     host: str
     port: int
     database: str
+    url: str
 
 
 class Settings(BaseSettings):
@@ -31,7 +32,14 @@ class Settings(BaseSettings):
     db: DatabaseSettings
 
 
-config: Settings = Settings.parse_file(
+settings: Settings = Settings.parse_file(
     path="bot/config/config.json",
     encoding="utf-8",
 )
+url = (
+    f"postgresql+{settings.db.drivername}://"
+    f"{settings.db.user}:{settings.db.password}@"
+    f"{settings.db.host}:{settings.db.port}"
+    f"/{settings.db.database}"
+)
+settings.db.url = url
