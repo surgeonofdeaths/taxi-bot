@@ -1,7 +1,7 @@
 from aiogram import Bot, Dispatcher
 from handlers import handler
 from aiogram.client.bot import DefaultBotProperties
-from config.config import config
+from config.config import settings
 from loguru import logger
 
 from middlewares import DbSessionMiddleware
@@ -12,17 +12,17 @@ import asyncio
 
 async def main():
     logger.add(
-        sink=config.logging.sink,
-        format=config.logging.format,
-        level=config.logging.level,
-        rotation=config.logging.rotation,
-        compression=config.logging.compression,
-        serialize=config.logging.serialize,
+        sink=settings.logging.sink,
+        format=settings.logging.format,
+        level=settings.logging.level,
+        rotation=settings.logging.rotation,
+        compression=settings.logging.compression,
+        serialize=settings.logging.serialize,
     )
 
     bot: Bot = Bot(
-        token=config.bot.token,
-        default=DefaultBotProperties(parse_mode=config.bot.parse_mode),
+        token=settings.bot.token,
+        default=DefaultBotProperties(parse_mode=settings.bot.parse_mode),
     )
     dp: Dispatcher = Dispatcher()
     dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))

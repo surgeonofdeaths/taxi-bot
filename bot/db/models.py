@@ -1,8 +1,8 @@
 import asyncio
 from datetime import datetime
 
-from db.base import Base
-from db.database import engine
+from .base import Base
+from .database import engine
 from sqlalchemy import (
     CHAR,
     BigInteger,
@@ -53,6 +53,7 @@ class Order(Base):
     note = Column(Text(length=1000))
     processed = Column(Boolean, default=False)
     start_address = Column(CHAR(length=256))
+
     destination_address = Column(CHAR(length=256))
     price = Column(Integer, nullable=True)
     number_of_people = Column(Integer, nullable=True)
@@ -67,10 +68,10 @@ class Order(Base):
         return f"{self.__class__.__name__}<id={self.id}, name={self.user_id}>"
 
 
-async def init_models():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+# async def init_models():
+#     async with engine.begin() as conn:
+#         await conn.run_sync(Base.metadata.drop_all)
+#         await conn.run_sync(Base.metadata.create_all)
 
 
-asyncio.run(init_models())
+# asyncio.run(init_models())
