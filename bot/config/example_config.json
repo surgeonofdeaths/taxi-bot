@@ -5,7 +5,7 @@
     "parse_mode": "html"
   },
   "logging": {
-    "sink": "../../logs/debug.log",
+    "sink": "logs/debug.log",
     "serialize": false,
     "rotation": "50 MB",
     "compression": "zip",
