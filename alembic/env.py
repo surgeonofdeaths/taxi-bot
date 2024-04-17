@@ -27,8 +27,7 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-url = "asyncpg+postgresql://postgres:root@localhost:5432/taxibot"
-config.set_main_option("sqlalchemy.url", url)
+config.set_main_option("sqlalchemy.url", cfg.db.url)
 
 
 def run_migrations_offline() -> None:
