@@ -26,6 +26,20 @@ services:
       - '5432:5432'
     volumes:
       - "/opt/postgresql/data:/var/lib/postgresql/data"
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pg-admin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+    networks:
+      - pg-network
+
+networks:
+  pg-network:
+
 volumes:
   db:
     driver: local
