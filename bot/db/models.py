@@ -12,6 +12,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    DateTime,
 )
 from sqlalchemy.orm import relationship
 
@@ -20,13 +21,14 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(length=255), nullable=True)
+    first_name = Column(String(length=255), nullable=True)
+    last_name = Column(String(length=255), nullable=True)
     username = Column(String(length=255), nullable=False)
     phone_number = Column(String(length=255), nullable=True)
-    telegram_id = Column(BigInteger, nullable=False)
+    telegram_id = Column(BigInteger, nullable=False, unique=True)
     admin = Column(Boolean, default=False)
-    created_at = Column(default=datetime.utcnow())
-    updated_at = Column(default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow)
 
     def __str__(self):
         return f"{self.__class__.__name__}<id={self.id}, name={self.name}>"
@@ -37,8 +39,8 @@ class Operator(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     phone_number = Column(String(length=255), nullable=True)
-    created_at = Column(default=datetime.utcnow())
-    updated_at = Column(default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow)
 
     def __str__(self):
         return f"<id={self.id}, phone={self.phone_number}>"
@@ -50,7 +52,7 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     operator_id = Column(Integer, ForeignKey("operators.id"))
-    note = Column(Text(length=1000))
+    note = Column(Text())
     processed = Column(Boolean, default=False)
     start_address = Column(CHAR(length=256))
 
@@ -58,8 +60,8 @@ class Order(Base):
     price = Column(Integer, nullable=True)
     number_of_people = Column(Integer, nullable=True)
     car_mark = Column(CHAR(length=256))
-    created_at = Column(default=datetime.utcnow())
-    updated_at = Column(default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", backref="orders")
     operator = relationship("Operator", backref="orders")
