@@ -55,7 +55,6 @@ class Order(Base):
     note = Column(Text())
     processed = Column(Boolean, default=False)
     start_address = Column(CHAR(length=256))
-
     destination_address = Column(CHAR(length=256))
     price = Column(Integer, nullable=True)
     number_of_people = Column(Integer, nullable=True)
