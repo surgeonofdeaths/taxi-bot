@@ -2,11 +2,12 @@ from aiogram import Bot, Dispatcher
 from handlers import handler
 from aiogram.client.bot import DefaultBotProperties
 from config.config import settings
+from db.database import sessionmaker
+from keyboards.main_menu import set_main_menu
+
 from loguru import logger
 
 from middlewares import DbSessionMiddleware
-from db.database import sessionmaker
-
 import asyncio
 
 
@@ -30,6 +31,7 @@ async def main():
     dp.include_router(handler.router)
     logger.info("Bot started successfuly!")
 
+    await set_main_menu(bot)
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
