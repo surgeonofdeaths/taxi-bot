@@ -20,16 +20,17 @@ async def process_callback_test(query: CallbackQuery):
 
 @router.message(Command(commands=["start"]))
 async def process_start_command(message: Message, session: AsyncSession):
-    keyboard_markup = 
+    # keyboard_markup = 
     await db_create_user(message.from_user, session)
     await message.answer(
         "Добро пожаловать в бота для заказа такси!",
-        reply_markup=keyboard_markup.as_markup(),
+        # reply_markup=keyboard_markup.as_markup(),
     )
 
 
 @router.message(Command(commands=["order"]))
 async def process_order_command(message: Message):
+
     await message.answer("order")
 
 
