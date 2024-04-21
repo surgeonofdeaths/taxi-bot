@@ -35,8 +35,9 @@ def _request_url(url, headers, method: str = "get", json: dict | None = None) ->
     try:
         response = _request_by_method(url, headers, method, json)
 
-        if response.status_code == 200:
-            logger.success("Request successful!")
+        print(response.status_code)
+        if response.status_code in (200, 201):
+            logger.success(f"Request successful! Status code: {response.status_code}")
         else:
             logger.error(f"Request failed with status code: {response.status_code}")
         return response.json()
