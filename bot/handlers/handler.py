@@ -13,12 +13,12 @@ from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
 from keyboards.factory_kb import TestCallbackFactory
 from keyboards.keyboard import get_keyboard_markup
 from loguru import logger
-from services import db_create_user
+from services import create_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.states.order_state import Order
 from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
 from services.helpcrunch import create_message, search_customer
-# from services.db_service import 
+from services.db_service import get_user
 
 router = Router()
 
@@ -31,7 +31,7 @@ async def process_start_command(message: Message, session: AsyncSession):
         [KeyboardButton(text="О боте")],
     ]
     keyboard = ReplyKeyboardMarkup(keyboard=kb)
-    await db_create_user(message.from_user, session)
+    await create_user(message.from_user, session)
     await message.answer(
         LEXICON_COMMANDS.get("start"),
         reply_markup=keyboard,
@@ -107,7 +107,6 @@ async def process_fsm_start_address(message: Message, state: FSMContext):
 async def process_fsm_destination_address(message: Message, state: FSMContext):
     button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
     keyboard = get_keyboard_markup(button_cancel)
-    print("2",  keyboard)
     await state.update_data(destination_address=message.text)
     await state.set_state(Order.writing_note)
     await message.answer(
@@ -116,13 +115,15 @@ async def process_fsm_destination_address(message: Message, state: FSMContext):
 
 
 @router.message(Order.writing_note)
-async def process_fsm_note(message: Message, state: FSMContext):
+async def process_fsm_note(message: Message, state: FSMContext, session: AsyncSession):
     await state.update_data(note=message.text)
     user_data = await state.get_data()
     text = f"Номер телефона: {user_data['phone_number']}\nНачальный адрес: {user_data['start_address']}\nАдрес прибытия: {user_data['destination_address']}\nПожелание: {user_data['note']}"
-    customer_id = search_customer(message.from_user.id)["data"][0]["id"]
 
-    json = {"chat": customer_id, "text": text, "type": "message"}
+    user = await get_user(message.from_user.id, session)
+    chat_id = user.chat_id
+    logger.info(chat_id)
+    json = {"chat": chat_id, "text": text, "type": "message"}
     created_message = create_message(json)
 
     await state.clear()

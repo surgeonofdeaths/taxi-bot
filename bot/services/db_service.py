@@ -7,9 +7,10 @@ from aiogram.types import Message
 from loguru import logger
 
 from typing import Optional
+from services.helpcrunch import search_customer
 
 
-async def db_add_to_db(item, session: AsyncSession):
+async def add_to_db(item, session: AsyncSession):
     session.add(item)
 
     try:
@@ -23,32 +24,20 @@ async def db_add_to_db(item, session: AsyncSession):
         return False
 
 
-async def db_create_user(user: Optional[UserType], session: AsyncSession):
+async def create_user(user: Optional[UserType], session: AsyncSession):
+    chat_id = search_customer(user.id)["data"][0]["id"]
     username = user.username if user.username else "no_username"
     user_entity = User(
+        chat_id=chat_id,
         first_name=user.first_name,
         last_name=user.last_name,
         username=username,
         telegram_id=user.id,
     )
-    await db_add_to_db(user_entity, session)
+    await add_to_db(user_entity, session)
 
 
-def get_users(id):
-    users = select(User)
-    print(users)
-    return users
-
-
-def create_user(user: Optional[UserType]):
-    # if user.id not in get_users(user.id)
-    get_users(user.id)
-
-    # print(user.first_name, user.id)
-    user_entity = insert(User).values(
-        first_name=user.first_name,
-        last_name=user.last_name,
-        username=user.username,
-        telegram_id=user.id,
-    )
-    return user_entity
+async def get_user(telegram_id: int, session: AsyncSession):
+    query = select(User).where(User.telegram_id == telegram_id).limit(1)
+    first_user = await session.execute(query)
+    return first_user.scalars().first()
