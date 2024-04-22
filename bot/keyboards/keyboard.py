@@ -27,29 +27,38 @@ from aiogram.utils.keyboard import (
     KeyboardButton,
     KeyboardBuilder,
     ReplyKeyboardMarkup,
+    ReplyKeyboardBuilder,
 )
+from lexicon.lexicon import LEXICON
 
 # from keyboards.factory_kb import TestCallbackFactory
 
 
-def build_inline_kb(*buttons: list[str], adjust: int = 2) -> InlineKeyboardBuilder:
+def build_inline_kb(*buttons: tuple[KeyboardButton], adjust: int = 2) -> InlineKeyboardBuilder:
     kb_builder = InlineKeyboardBuilder()
     kb_builder.row(*buttons)
     kb_builder.adjust(adjust)
     return kb_builder
 
 
-def build_kb(*buttons: list[str]) -> KeyboardBuilder:
-    print("build_kb")
-    kb_builder = KeyboardBuilder(button_type=KeyboardButton)
-    kb_builder.add(*buttons)
+def build_kb(*buttons: tuple[KeyboardButton], adjust: int = 2) -> KeyboardBuilder:
+    kb_builder = ReplyKeyboardBuilder()
+    kb_builder.row(*buttons)
+    kb_builder.adjust(adjust)
     return kb_builder
 
 
-def get_keyboard_markup() -> ReplyKeyboardMarkup:
-    button_contact = KeyboardButton(
-        text="Отправить свой контакт ☎️",
-        request_contact=True,
-    )
-    kb_markup = build_inline_kb(button_contact, adjust=2)
-    return kb_markup.as_markup()
+def get_keyboard_markup(*buttons: tuple[KeyboardButton], adjust: int = 2) -> ReplyKeyboardMarkup:
+    kb_markup = build_kb(*buttons, adjust=adjust)
+    return kb_markup.as_markup(resize_keyboard=True)
+
+
+# def form_buttons(*text: tuple[str]) -> list[KeyboardButton]:
+#     KeyboardButton(text=t, )
+#     buttons = [
+#         KeyboardButton(
+#             text=LEXICON.get("contact"),
+#             request_contact=True,
+#         )
+#     ]
+#     return buttons
