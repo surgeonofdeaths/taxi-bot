@@ -57,7 +57,7 @@ class Order(Base):
     start_address = Column(CHAR(length=256))
     destination_address = Column(CHAR(length=256))
     price = Column(Integer, nullable=True)
-    number_of_people = Column(Integer, nullable=True)
+    number_of_people = Column(Integer, nullable=True)  # TODO: do I need this field?
     car_mark = Column(CHAR(length=256))
     created_at = Column(DateTime, default=datetime.utcnow())
     updated_at = Column(DateTime, default=datetime.utcnow)
