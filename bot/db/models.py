@@ -21,6 +21,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    chat_id = Column(Integer)
     first_name = Column(String(length=255), nullable=True)
     last_name = Column(String(length=255), nullable=True)
     username = Column(String(length=255), nullable=False)
@@ -31,7 +32,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow)
 
     def __str__(self):
-        return f"{self.__class__.__name__}<id={self.id}, name={self.name}>"
+        return f"{self.__class__.__name__}<id={self.id}, username={self.username}>"
 
 
 class Operator(Base):
