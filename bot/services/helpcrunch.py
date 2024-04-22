@@ -37,7 +37,7 @@ def _request_url(url, headers, method: str = "get", json: dict | None = None) ->
 
         print(response.status_code)
         if response.status_code in (200, 201):
-            logger.success(f"Request successful! Status code: {response.status_code}")
+            logger.success(f"Request successful! status code: {response.status_code}")
         else:
             logger.error(f"Request failed with status code: {response.status_code}")
         return response.json()
@@ -55,9 +55,9 @@ def get_message(chat_id: int, message_id: int | None = None) -> dict:
     return request
 
 
-def create_message(json: dict | None = None):
+def create_message(message: dict):
     url = build_url(URL, "messages")
-    request = _request_url(url, HEADERS, method="post", json=json)
+    request = _request_url(url, HEADERS, method="post", json=message)
     return request
 
 
@@ -65,7 +65,27 @@ def get_customers():
     pass
 
 
+def search_customer(telegram_id: str | int):
+    filter = {
+        "filter": [
+            {
+                "field": "customers.telegramId",
+                "operator": "=",
+                "value": telegram_id,
+            }
+        ],
+        "limit": 1,
+        "offset": 0,
+        "sort": "customers.firstSeen",
+        "order": "DESC",
+    }
+    url = build_url(URL, "customers", "search")
+    request = _request_url(url, HEADERS, method="post", json=filter)
+    return request
+
+
 if __name__ == "__main__":
     # pprint(get_message(1))
     json = {"chat": 1, "text": "A message from python code", "type": "message"}
-    print(create_message(json))
+    pprint(search_customer("1013857410"))
+    # print(create_message(json))
