@@ -35,7 +35,6 @@ def _request_url(url, headers, method: str = "get", json: dict | None = None) ->
     try:
         response = _request_by_method(url, headers, method, json)
 
-        print(response.status_code)
         if response.status_code in (200, 201):
             logger.success(f"Request successful! status code: {response.status_code}")
         else:
@@ -86,6 +85,7 @@ def search_customer(telegram_id: str | int):
 
 if __name__ == "__main__":
     # pprint(get_message(1))
-    json = {"chat": 1, "text": "A message from python code", "type": "message"}
-    pprint(search_customer("1013857410"))
-    # print(create_message(json))
+    customer = search_customer("6420191285")
+    chat_id = customer["data"][0]["id"]
+    json = {"chat": chat_id, "text": "A message from python code", "type": "message"}
+    print(create_message(json))

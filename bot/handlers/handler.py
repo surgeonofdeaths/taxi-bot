@@ -17,7 +17,7 @@ from services import db_create_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.states.order_state import Order
 from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
-from services.helpcrunch import create_message
+from services.helpcrunch import create_message, search_customer
 # from services.db_service import 
 
 router = Router()
@@ -119,13 +119,12 @@ async def process_fsm_destination_address(message: Message, state: FSMContext):
 async def process_fsm_note(message: Message, state: FSMContext):
     await state.update_data(note=message.text)
     user_data = await state.get_data()
-    # pprint(user_data)
-    # pprint(user_data["note"])
-    # pprint(user_data["start_address"])
-
     text = f"Номер телефона: {user_data['phone_number']}\nНачальный адрес: {user_data['start_address']}\nАдрес прибытия: {user_data['destination_address']}\nПожелание: {user_data['note']}"
-    json = {"chat": 1, "text": text, "type": "message"}
-    create_message(json)
+    customer_id = search_customer(message.from_user.id)["data"][0]["id"]
+
+    json = {"chat": customer_id, "text": text, "type": "message"}
+    created_message = create_message(json)
+
     await state.clear()
     await message.answer(
         text=LEXICON.get("end_order"),
