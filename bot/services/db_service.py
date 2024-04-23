@@ -41,3 +41,30 @@ async def get_user(telegram_id: int, session: AsyncSession):
     query = select(User).where(User.telegram_id == telegram_id).limit(1)
     first_user = await session.execute(query)
     return first_user.scalars().first()
+
+
+async def create_order(telegram_id: int, session: AsyncSession):
+    return
+
+
+async def create_order(
+    session: AsyncSession,
+    user_id: int,
+    operator_id: int,
+    note: str,
+    start_address: str,
+    destination_address: str,
+    price: int,
+    car_mark: str,
+):
+    # Create a new order object
+    new_order = Order(
+        user_id=user_id,
+        operator_id=operator_id,
+        note=note,
+        start_address=start_address,
+        destination_address=destination_address,
+        price=price,
+        car_mark=car_mark,
+    )
+    await add_to_db(new_order)

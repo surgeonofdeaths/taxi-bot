@@ -59,10 +59,7 @@ async def process_order_command(message: Message, state: FSMContext):
 @router.message(StateFilter("*"), F.text.lower() == "отменить заказ ❌")
 async def process_fsm_cancel(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer(
-        text="Заказ отменен",
-        reply_markup=ReplyKeyboardRemove()
-    )
+    await message.answer(text="Заказ отменен", reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(Order.getting_phone)
@@ -109,9 +106,7 @@ async def process_fsm_destination_address(message: Message, state: FSMContext):
     keyboard = get_keyboard_markup(button_cancel)
     await state.update_data(destination_address=message.text)
     await state.set_state(Order.writing_note)
-    await message.answer(
-        text=LEXICON.get("get_note"), reply_markup=keyboard
-    )
+    await message.answer(text=LEXICON.get("get_note"), reply_markup=keyboard)
 
 
 @router.message(Order.writing_note)
@@ -121,8 +116,10 @@ async def process_fsm_note(message: Message, state: FSMContext, session: AsyncSe
     text = f"Номер телефона: {user_data['phone_number']}\nНачальный адрес: {user_data['start_address']}\nАдрес прибытия: {user_data['destination_address']}\nПожелание: {user_data['note']}"
 
     user = await get_user(message.from_user.id, session)
+    user.phone_number = user_data["phone_number"]
+    await session.commit()
+
     chat_id = user.chat_id
-    logger.info(chat_id)
     json = {"chat": chat_id, "text": text, "type": "message"}
     created_message = create_message(json)
 
