@@ -209,7 +209,7 @@ async def process_fsm_note(message: Message, state: FSMContext, session: AsyncSe
     await state.update_data(note=message.text)
     user_data = await state.get_data()
 
-    text = get_order_info(user_data)
+    text = LEXICON.get("order_confirm") + "\n\n" + get_order_info(user_data)
     button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
     button_confirm = KeyboardButton(text=LEXICON.get("confirm"))
     keyboard = get_keyboard_markup(button_confirm, button_cancel)
