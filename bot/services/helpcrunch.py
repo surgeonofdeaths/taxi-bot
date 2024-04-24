@@ -2,6 +2,7 @@ import requests
 from loguru import logger
 import os
 from pprint import pprint
+from typing import Any
 
 URL = "https://api.helpcrunch.com/v1"
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
@@ -54,14 +55,10 @@ def get_message(chat_id: int, message_id: int | None = None) -> dict:
     return request
 
 
-def create_message(message: dict):
+def send_message(message: dict):
     url = build_url(URL, "messages")
     request = _request_url(url, HEADERS, method="post", json=message)
     return request
-
-
-def get_customers():
-    pass
 
 
 def search_customer(telegram_id: str | int):
@@ -83,9 +80,14 @@ def search_customer(telegram_id: str | int):
     return request
 
 
+def get_order_info(user_data: dict[str, Any]) -> str:
+    text = f"Номер телефона: {user_data['phone_number']}\nНачальный адрес: {user_data['start_address']}\nАдрес прибытия: {user_data['destination_address']}\nПожелание: {user_data['note']}"
+    return text
+
+
 if __name__ == "__main__":
     # pprint(get_message(1))
     customer = search_customer("6420191285")
     chat_id = customer["data"][0]["id"]
     json = {"chat": chat_id, "text": "A message from python code", "type": "message"}
-    print(create_message(json))
+    print(send_message(json))
