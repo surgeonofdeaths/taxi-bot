@@ -13,7 +13,9 @@ from sqlalchemy import (
     String,
     Text,
     DateTime,
+    
 )
+from sqlalchemy_utils import EmailType
 from sqlalchemy.orm import relationship
 
 
@@ -39,7 +41,10 @@ class Operator(Base):
     __tablename__ = "operators"
 
     id = Column(Integer, primary_key=True, index=True)
-    phone_number = Column(String(length=255), nullable=True)
+    name = Column(String(255))
+    email = Column(EmailType)
+    role = Column(String(255))  # TODO: enum type
+    # phone_number = Column(String(length=255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow())
     updated_at = Column(DateTime, default=datetime.utcnow)
 
@@ -53,12 +58,12 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     operator_id = Column(Integer, ForeignKey("operators.id"))
-    note = Column(Text())
+    note = Column(Text(), nullable=True)
     processed = Column(Boolean, default=False)
     start_address = Column(CHAR(length=256))
     destination_address = Column(CHAR(length=256))
     price = Column(Integer, nullable=True)
-    number_of_people = Column(Integer, nullable=True)  # TODO: do I need this field?
+    # number_of_people = Column(Integer, nullable=True)  # TODO: do I need this field?
     car_mark = Column(CHAR(length=256))
     created_at = Column(DateTime, default=datetime.utcnow())
     updated_at = Column(DateTime, default=datetime.utcnow)
