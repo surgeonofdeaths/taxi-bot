@@ -19,14 +19,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from states.order_state import Order
 from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
 from services.helpcrunch import send_message, search_customer, get_order_info
-from services.db_service import get_user
+from services.db_service import get_user, create_order
 from filters.filter import validate_ukrainian_phone_number
 
 router = Router()
 
 
 @router.message(Command(commands=["start"]))
-async def process_start_command(message: Message, session: AsyncSession):
+async def cmd_start(message: Message, session: AsyncSession):
     kb = get_menu_kb()
     await create_user(message.from_user, session)
     await message.answer(
@@ -60,7 +60,6 @@ async def process_fsm_confirmation(
 ):
     user_data = await state.get_data()
     text = get_order_info(user_data)
-    logger.info(user_data["note"])
 
     user = await get_user(message.from_user.id, session)
     user.phone_number = user_data["phone_number"]
@@ -69,6 +68,16 @@ async def process_fsm_confirmation(
     chat_id = user.chat_id
     json = {"chat": chat_id, "text": text, "type": "message"}
     created_message = send_message(json)
+
+    logger.info(message.from_user)
+    await create_order(
+        session,
+        user_id=message.from_user.id,
+        start_address=user_data["start_address"],
+        destination_address=user_data["destination_address"],
+        note=user_data["note"],
+    )
+
     kb = get_menu_kb()
 
     await state.clear()
@@ -105,11 +114,14 @@ async def cmd_help(message: Message, state: FSMContext, session: AsyncSession):
 async def process_order_command(
     message: Message, state: FSMContext, session: AsyncSession
 ):
-    user = await get_user(message.from_user.id, session)
-    logger.info(user)
+    try:
+        user = await get_user(message.from_user.id, session)
+    except AttributeError:
+        kb = get_menu_kb()
+        await message.answer(LEXICON.get("no_user"), reply_markup=kb)
     if user and user.phone_number:
-        button_yes = KeyboardButton(text="Да, использовать")
-        button_no = KeyboardButton(text="Нет, ввести новый")
+        button_yes = KeyboardButton(text=LEXICON.get("btn_yes"))
+        button_no = KeyboardButton(text=LEXICON.get("btn_no"))
         button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
         keyboard = get_kb_markup(button_yes, button_no, button_cancel)
 
@@ -135,7 +147,6 @@ async def process_order_command(
 @router.message(Order.getting_phone)
 async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncSession):
     # TODO: Should the bot allow others contacts?
-
     button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
 
     if message.contact or message.text.lower().startswith("да"):
