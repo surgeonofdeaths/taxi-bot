@@ -13,7 +13,6 @@ from sqlalchemy import (
     String,
     Text,
     DateTime,
-    
 )
 from sqlalchemy_utils import EmailType
 from sqlalchemy.orm import relationship
@@ -56,12 +55,12 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     operator_id = Column(Integer, ForeignKey("operators.id"))
-    note = Column(Text(), nullable=True)
-    processed = Column(Boolean, default=False)
-    start_address = Column(CHAR(length=256))
-    destination_address = Column(CHAR(length=256))
+    note = Column(Text())
+    processed = Column(Boolean, default=False, nullable=False)
+    start_address = Column(CHAR(length=256), nullable=False)
+    destination_address = Column(CHAR(length=256), nullable=False)
     price = Column(Integer, nullable=True)
     # number_of_people = Column(Integer, nullable=True)  # TODO: do I need this field?
     car_mark = Column(CHAR(length=256))
