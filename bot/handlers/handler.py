@@ -28,9 +28,9 @@ router = Router()
 @router.message(Command(commands=["start"]))
 async def process_start_command(message: Message, session: AsyncSession):
     kb = [
-        KeyboardButton(text="Заказать такси"),
-        KeyboardButton(text="Связаться с оператором"),
-        KeyboardButton(text="О боте"),
+        KeyboardButton(text=LEXICON_COMMANDS.get("order")),
+        KeyboardButton(text=LEXICON_COMMANDS.get("contact")),
+        KeyboardButton(text=LEXICON_COMMANDS.get("info")),
     ]
     keyboard = get_keyboard_markup(*kb)
     await create_user(message.from_user, session)
@@ -130,7 +130,7 @@ async def process_order_command(
         button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
         keyboard = get_keyboard_markup(button_contact, button_cancel)
         await message.answer(
-            LEXICON_COMMANDS.get("order"),
+            LEXICON.get("order"),
             reply_markup=keyboard,
         )
         await state.set_state(Order.getting_phone)
