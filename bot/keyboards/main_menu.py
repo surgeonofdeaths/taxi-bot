@@ -13,7 +13,7 @@ async def set_main_menu(bot: Bot):
             description="Заказать такси",
         ),
         BotCommand(
-            command="info",
+            command="help",
             description="О боте",
         ),
         BotCommand(

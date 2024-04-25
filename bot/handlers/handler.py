@@ -12,7 +12,7 @@ from aiogram.utils.keyboard import (
 )
 from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
 from keyboards.factory_kb import TestCallbackFactory
-from keyboards.keyboard import get_keyboard_markup
+from keyboards.keyboard import get_kb_markup, get_menu_kb
 from loguru import logger
 from services import create_user
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,16 +27,11 @@ router = Router()
 
 @router.message(Command(commands=["start"]))
 async def process_start_command(message: Message, session: AsyncSession):
-    kb = [
-        KeyboardButton(text=LEXICON_COMMANDS.get("order")),
-        KeyboardButton(text=LEXICON_COMMANDS.get("contact")),
-        KeyboardButton(text=LEXICON_COMMANDS.get("info")),
-    ]
-    keyboard = get_keyboard_markup(*kb)
+    kb = get_menu_kb()
     await create_user(message.from_user, session)
     await message.answer(
         LEXICON_COMMANDS.get("start"),
-        reply_markup=keyboard,
+        reply_markup=kb,
     )
 
 
@@ -53,8 +48,9 @@ async def process_start_command(message: Message, session: AsyncSession):
 )
 @router.message(F.text.lower() == "отменить заказ ❌")
 async def process_fsm_cancel(message: Message, state: FSMContext):
+    kb = get_menu_kb()
     await state.clear()
-    await message.answer(text=LEXICON.get("user_cancel_order"), reply_markup=ReplyKeyboardRemove())
+    await message.answer(text=LEXICON.get("user_cancel_order"), reply_markup=kb)
 
 
 @router.message(Order.confirmation, Command(commands=["confirm"]))
@@ -73,11 +69,12 @@ async def process_fsm_confirmation(
     chat_id = user.chat_id
     json = {"chat": chat_id, "text": text, "type": "message"}
     created_message = send_message(json)
+    kb = get_menu_kb()
 
     await state.clear()
     await message.answer(
         text=LEXICON.get("end_order"),
-        reply_markup=ReplyKeyboardRemove(),
+        reply_markup=kb,
     )
 
 
@@ -87,7 +84,7 @@ async def process_fsm_fail_confirmation(
 ):
     button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
     button_confirm = KeyboardButton(text=LEXICON.get("confirm"))
-    keyboard = get_keyboard_markup(button_confirm, button_cancel)
+    keyboard = get_kb_markup(button_confirm, button_cancel)
 
     await message.answer(
         text=LEXICON.get("fail_confirm"),
@@ -95,12 +92,11 @@ async def process_fsm_fail_confirmation(
     )
 
 
-@router.message(StateFilter(None), Command(commands=["info"]))
-async def cmd_info(
-    message: Message, state: FSMContext, session: AsyncSession
-):
+@router.message(StateFilter(None), Command(commands=["help"]))
+@router.message(StateFilter(None), F.text.lower() == "информация о боте")
+async def cmd_help(message: Message, state: FSMContext, session: AsyncSession):
     await message.answer(
-        text=LEXICON_COMMANDS.get("info"),
+        text=LEXICON_COMMANDS.get("help"),
     )
 
 
@@ -115,7 +111,7 @@ async def process_order_command(
         button_yes = KeyboardButton(text="Да, использовать")
         button_no = KeyboardButton(text="Нет, ввести новый")
         button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
-        keyboard = get_keyboard_markup(button_yes, button_no, button_cancel)
+        keyboard = get_kb_markup(button_yes, button_no, button_cancel)
 
         await state.set_state(Order.getting_phone)
         await message.answer(
@@ -128,7 +124,7 @@ async def process_order_command(
             request_contact=True,
         )
         button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
-        keyboard = get_keyboard_markup(button_contact, button_cancel)
+        keyboard = get_kb_markup(button_contact, button_cancel)
         await message.answer(
             LEXICON.get("order"),
             reply_markup=keyboard,
@@ -143,7 +139,7 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
     button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
 
     if message.contact or message.text.lower().startswith("да"):
-        keyboard = get_keyboard_markup(button_cancel)
+        keyboard = get_kb_markup(button_cancel)
         if message.contact:
             await state.update_data(phone_number=message.contact.phone_number)
         else:
@@ -160,12 +156,12 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
             request_contact=True,
         )
 
-        keyboard = get_keyboard_markup(button_contact, button_cancel)
+        keyboard = get_kb_markup(button_contact, button_cancel)
         await message.answer(text=LEXICON_COMMANDS.get("order"), reply_markup=keyboard)
     else:
         is_valid = validate_ukrainian_phone_number(message.text.strip())
         if is_valid:
-            keyboard = get_keyboard_markup(button_cancel)
+            keyboard = get_kb_markup(button_cancel)
             await state.update_data(phone_number=message.text.strip())
             await state.set_state(Order.writing_start_address)
             await message.answer(
@@ -178,7 +174,7 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
                 request_contact=True,
             )
 
-            keyboard = get_keyboard_markup(button_contact, button_cancel)
+            keyboard = get_kb_markup(button_contact, button_cancel)
             await message.answer(
                 text=LEXICON.get("contact_misspell"), reply_markup=keyboard
             )
@@ -187,7 +183,7 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
 @router.message(Order.writing_start_address)
 async def process_fsm_start_address(message: Message, state: FSMContext):
     button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
-    keyboard = get_keyboard_markup(button_cancel)
+    keyboard = get_kb_markup(button_cancel)
     await state.update_data(start_address=message.text)
     await state.set_state(Order.writing_destination_address)
     await message.answer(
@@ -198,7 +194,7 @@ async def process_fsm_start_address(message: Message, state: FSMContext):
 @router.message(Order.writing_destination_address)
 async def process_fsm_destination_address(message: Message, state: FSMContext):
     button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
-    keyboard = get_keyboard_markup(button_cancel)
+    keyboard = get_kb_markup(button_cancel)
     await state.update_data(destination_address=message.text)
     await state.set_state(Order.writing_note)
     await message.answer(text=LEXICON.get("get_note"), reply_markup=keyboard)
@@ -212,7 +208,7 @@ async def process_fsm_note(message: Message, state: FSMContext, session: AsyncSe
     text = LEXICON.get("order_confirm") + "\n\n" + get_order_info(user_data)
     button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
     button_confirm = KeyboardButton(text=LEXICON.get("confirm"))
-    keyboard = get_keyboard_markup(button_confirm, button_cancel)
+    keyboard = get_kb_markup(button_confirm, button_cancel)
 
     await state.set_state(Order.confirmation)
     await message.answer(
