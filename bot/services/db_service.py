@@ -15,7 +15,7 @@ async def add_to_db(item, session: AsyncSession):
 
     try:
         await session.commit()
-        await session.refresh(item)  # check
+        await session.refresh(item)
         logger.info(f"{item}: has been added to the database")
         return True
     except IntegrityError:
@@ -24,12 +24,16 @@ async def add_to_db(item, session: AsyncSession):
         return False
 
 
-async def create_user(user: Optional[UserType], session: AsyncSession):
-    chat_id = search_customer(user.id)["data"][0]["id"]
+async def create_user(user: Optional[UserType], chat_id: str, session: AsyncSession):
+    chat = search_customer(user.id)
+    logger.info(chat)
+    logger.info(user.id)
+    customer_id = chat["data"][0]["id"]
     username = user.username if user.username else "no_username"
     user_entity = User(
         id=user.id,
-        chat_id=chat_id,
+        customer_id=str(customer_id),
+        chat_id=str(chat_id),
         first_name=user.first_name,
         last_name=user.last_name,
         username=username,

@@ -18,7 +18,12 @@ from services import create_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.order_state import Order
 from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
-from services.helpcrunch import send_message, search_customer, get_order_info
+from services.helpcrunch import (
+    send_message,
+    get_order_info,
+    create_customer,
+    create_chat,
+)
 from services.db_service import get_user, create_order
 from filters.filter import validate_ukrainian_phone_number
 
@@ -28,7 +33,12 @@ router = Router()
 @router.message(Command(commands=["start"]))
 async def cmd_start(message: Message, session: AsyncSession):
     kb = get_menu_kb()
-    await create_user(message.from_user, session)
+    customer = create_customer(message.from_user.id, message.from_user.full_name)
+    logger.info(customer)
+    if not customer.get("errors"):
+        chat = create_chat(customer["id"])
+        logger.info(chat)
+        await create_user(message.from_user, chat["id"], session)
     await message.answer(
         LEXICON_COMMANDS.get("start"),
         reply_markup=kb,
@@ -60,16 +70,19 @@ async def process_fsm_confirmation(
 ):
     user_data = await state.get_data()
     text = get_order_info(user_data)
+    logger.info(user_data)
 
     user = await get_user(message.from_user.id, session)
+    print(user)
     user.phone_number = user_data["phone_number"]
     await session.commit()
 
     chat_id = user.chat_id
     json = {"chat": chat_id, "text": text, "type": "message"}
+    logger.info(json)
     created_message = send_message(json)
+    logger.info(created_message)
 
-    logger.info(message.from_user)
     await create_order(
         session,
         user_id=message.from_user.id,
@@ -152,9 +165,11 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
     if message.contact or message.text.lower().startswith("да"):
         keyboard = get_kb_markup(button_cancel)
         if message.contact:
+            logger.info(message.contact.phone_number)
             await state.update_data(phone_number=message.contact.phone_number)
         else:
             user = await get_user(message.from_user.id, session)
+            logger.info(user.phone_number)
             await state.update_data(phone_number=user.phone_number)
         await state.set_state(Order.writing_start_address)
         await message.answer(

@@ -65,7 +65,7 @@ def search_customer(telegram_id: str | int):
     filter = {
         "filter": [
             {
-                "field": "customers.telegramId",
+                "field": "customers.userId",
                 "operator": "=",
                 "value": telegram_id,
             }
@@ -85,9 +85,31 @@ def get_order_info(user_data: dict[str, Any]) -> str:
     return text
 
 
+def create_customer(user_id: str, name: str):
+    body = {
+        "userId": user_id,
+        "name": name,
+    }
+    url = build_url(URL, "customers")
+    request = _request_url(url, HEADERS, method="post", json=body)
+    return request
+
+
+def create_chat(customer_id: int, application: int = 2):
+    body = {
+        "customer": customer_id,
+        "application": application,
+    }
+    url = build_url(URL, "chats")
+    request = _request_url(url, HEADERS, method="post", json=body)
+    return request
+
+
 if __name__ == "__main__":
     # pprint(get_message(1))
-    customer = search_customer("6420191285")
-    chat_id = customer["data"][0]["id"]
-    json = {"chat": chat_id, "text": "A message from python code", "type": "message"}
-    print(send_message(json))
+    customer = search_customer("1013857410")
+    print(customer)
+    # chat_id = customer["data"][0]["id"]
+    # json = {"chat": chat_id, "text": "A message from python code", "type": "message"}
+    # print(send_messagk(json))
+    # customer = create_customer("1013857410", "Artem")
