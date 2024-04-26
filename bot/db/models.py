@@ -23,7 +23,8 @@ class User(Base):
 
     id = Column(BigInteger, primary_key=True, nullable=False, index=True)
     # id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(Integer)
+    customer_id = Column(String(length=255), nullable=True)
+    chat_id = Column(String(length=255), nullable=True)
     first_name = Column(String(length=255), nullable=True)
     last_name = Column(String(length=255), nullable=True)
     username = Column(String(length=255), nullable=False)
@@ -55,8 +56,9 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    note = Column(Text())
     operator_id = Column(Integer, ForeignKey("operators.id"))
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     note = Column(Text())
     processed = Column(Boolean, default=False, nullable=False)
     start_address = Column(CHAR(length=256), nullable=False)
