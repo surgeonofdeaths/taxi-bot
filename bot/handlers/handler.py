@@ -24,8 +24,9 @@ from services.helpcrunch import (
     create_customer,
     create_chat,
 )
-from services.db_service import get_user, create_order
+from services.db_service import create_order
 from filters.filter import validate_ukrainian_phone_number
+from db.models import User
 
 router = Router()
 
@@ -127,11 +128,9 @@ async def cmd_help(message: Message, state: FSMContext, session: AsyncSession):
 async def process_order_command(
     message: Message, state: FSMContext, session: AsyncSession
 ):
-    try:
-        user = await get_user(message.from_user.id, session)
-    except AttributeError:
-        kb = get_menu_kb()
-        await message.answer(LEXICON.get("no_user"), reply_markup=kb)
+    user = await session.get(User, message.from_user.id)
+    logger.info(user)
+
     if user and user.phone_number:
         button_yes = KeyboardButton(text=LEXICON.get("btn_yes"))
         button_no = KeyboardButton(text=LEXICON.get("btn_no"))
@@ -143,7 +142,7 @@ async def process_order_command(
             LEXICON.get("has_contact") + f"\n\n{user.phone_number}",
             reply_markup=keyboard,
         )
-    else:
+    elif user:
         button_contact = KeyboardButton(
             text=LEXICON.get("contact"),
             request_contact=True,
@@ -155,6 +154,10 @@ async def process_order_command(
             reply_markup=keyboard,
         )
         await state.set_state(Order.getting_phone)
+    else:
+        logger.warning("No user in the database")
+        kb = get_menu_kb()
+        await message.answer(LEXICON.get("no_user"), reply_markup=kb)
 
 
 @router.message(Order.getting_phone)

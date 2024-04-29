@@ -41,12 +41,6 @@ async def create_user(user: Optional[UserType], chat_id: str, session: AsyncSess
     await add_to_db(user_entity, session)
 
 
-async def get_user(telegram_id: int, session: AsyncSession):
-    query = select(User).where(User.id == telegram_id).limit(1)
-    first_user = await session.execute(query)
-    return first_user.scalars().first()
-
-
 async def create_order(
     session: AsyncSession,
     user_id: int,

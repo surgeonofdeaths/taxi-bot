@@ -35,6 +35,7 @@ def _request_by_method(url, headers, method: str = "get", json: dict | None = No
 def _request_url(url, headers, method: str = "get", json: dict | None = None) -> dict:
     try:
         response = _request_by_method(url, headers, method, json)
+        logger.info(url, headers, method, json)
 
         if response.status_code in (200, 201):
             logger.success(f"Request successful! status code: {response.status_code}")
@@ -71,8 +72,6 @@ def search_customer(telegram_id: str | int):
             }
         ],
         "limit": 1,
-        "offset": 0,
-        "sort": "customers.firstSeen",
         "order": "DESC",
     }
     url = build_url(URL, "customers", "search")
