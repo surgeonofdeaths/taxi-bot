@@ -56,10 +56,9 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    note = Column(Text())
+    note = Column(Text(), nullable=True)
     operator_id = Column(Integer, ForeignKey("operators.id"))
     user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
-    note = Column(Text())
     processed = Column(Boolean, default=False, nullable=False)
     start_address = Column(CHAR(length=256), nullable=False)
     destination_address = Column(CHAR(length=256), nullable=False)
