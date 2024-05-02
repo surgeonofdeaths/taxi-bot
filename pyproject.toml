@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "taxi-bot"
+name = "bot"
 version = "0.1.0"
 description = ""
 authors = ["Artem Holodyr <artemmholodyr@gmail.com>"]
