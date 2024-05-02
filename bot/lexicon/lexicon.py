@@ -16,6 +16,7 @@ LEXICON: dict[str, str] = {
     "no_user": "Прежде чем заказывать такси, нажмите /start",
     "btn_yes": "Да, использовать",
     "btn_no": "Нет, ввести новый",
+    "no_note": "Без пожеланий ✏️",
 }
 
 LEXICON_COMMANDS: dict[str, str] = {

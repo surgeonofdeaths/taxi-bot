@@ -35,7 +35,6 @@ def _request_by_method(url, headers, method: str = "get", json: dict | None = No
 def _request_url(url, headers, method: str = "get", json: dict | None = None) -> dict:
     try:
         response = _request_by_method(url, headers, method, json)
-        logger.info(url, headers, method, json)
 
         if response.status_code in (200, 201):
             logger.success(f"Request successful! status code: {response.status_code}")
@@ -80,7 +79,8 @@ def search_customer(telegram_id: str | int):
 
 
 def get_order_info(user_data: dict[str, Any]) -> str:
-    text = f"Номер телефона: {user_data['phone_number']}\nНачальный адрес: {user_data['start_address']}\nАдрес прибытия: {user_data['destination_address']}\nПожелание: {user_data['note']}"
+    note = f"\nПожелание: {user_data['note']}" if user_data.get('note') else ""
+    text = f"Номер телефона: {user_data['phone_number']}\nНачальный адрес: {user_data['start_address']}\nАдрес прибытия: {user_data['destination_address']}" + note
     return text
 
 
@@ -104,11 +104,29 @@ def create_chat(customer_id: int, application: int = 2):
     return request
 
 
+def get_customer(user_id: str):
+    filter = {
+        "filter": [
+            {
+                "field": "customers.userId",
+                "operator": "=",
+                "value": user_id
+            }
+        ],
+        "limit": 1
+    }
+    url = build_url(URL, "customers", "search")
+    request = _request_url(url, HEADERS, method="post", json=filter)
+    return request
+
+
 if __name__ == "__main__":
     # pprint(get_message(1))
-    customer = search_customer("1013857410")
-    print(customer)
+    # customer = search_customer("1013857410")
+    # print(customer)
     # chat_id = customer["data"][0]["id"]
     # json = {"chat": chat_id, "text": "A message from python code", "type": "message"}
     # print(send_messagk(json))
     # customer = create_customer("1013857410", "Artem")
+    customer = get_customer("1013857410")
+    logger.info(customer)

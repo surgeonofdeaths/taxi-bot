@@ -23,6 +23,7 @@ from services.helpcrunch import (
     get_order_info,
     create_customer,
     create_chat,
+    get_customer,
 )
 from services.db_service import create_order
 from filters.filter import validate_ukrainian_phone_number
@@ -34,12 +35,13 @@ router = Router()
 @router.message(Command(commands=["start"]))
 async def cmd_start(message: Message, session: AsyncSession):
     kb = get_menu_kb()
-    customer = create_customer(message.from_user.id, message.from_user.full_name)
-    logger.info(customer)
-    if not customer.get("errors"):
+    customer = get_customer(message.from_user.id)
+    if customer and not customer.get("errors"):
+        chat = customer["data"][0]
+    else:
+        customer = create_customer(message.from_user.id, message.from_user.full_name)
         chat = create_chat(customer["id"])
-        logger.info(chat)
-        await create_user(message.from_user, chat["id"], session)
+    await create_user(message.from_user, chat["id"], session)
     await message.answer(
         LEXICON_COMMANDS.get("start"),
         reply_markup=kb,
@@ -73,7 +75,7 @@ async def process_fsm_confirmation(
     text = get_order_info(user_data)
     logger.info(user_data)
 
-    user = await get_user(message.from_user.id, session)
+    user = await session.get(User, message.from_user.id)
     print(user)
     user.phone_number = user_data["phone_number"]
     await session.commit()
@@ -89,7 +91,7 @@ async def process_fsm_confirmation(
         user_id=message.from_user.id,
         start_address=user_data["start_address"],
         destination_address=user_data["destination_address"],
-        note=user_data["note"],
+        note=user_data.get("note"),
     )
 
     kb = get_menu_kb()
@@ -171,7 +173,7 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
             logger.info(message.contact.phone_number)
             await state.update_data(phone_number=message.contact.phone_number)
         else:
-            user = await get_user(message.from_user.id, session)
+            user = await session.get(User, message.from_user.id)
             logger.info(user.phone_number)
             await state.update_data(phone_number=user.phone_number)
         await state.set_state(Order.writing_start_address)
@@ -186,7 +188,7 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
         )
 
         keyboard = get_kb_markup(button_contact, button_cancel)
-        await message.answer(text=LEXICON_COMMANDS.get("order"), reply_markup=keyboard)
+        await message.answer(text=LEXICON.get("order"), reply_markup=keyboard)
     else:
         is_valid = validate_ukrainian_phone_number(message.text.strip())
         if is_valid:
@@ -222,8 +224,9 @@ async def process_fsm_start_address(message: Message, state: FSMContext):
 
 @router.message(Order.writing_destination_address)
 async def process_fsm_destination_address(message: Message, state: FSMContext):
-    button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
-    keyboard = get_kb_markup(button_cancel)
+    btn_cancel = KeyboardButton(text=LEXICON.get("cancel"))
+    btn_no_note = KeyboardButton(text=LEXICON.get("no_note"))
+    keyboard = get_kb_markup(btn_no_note, btn_cancel)
     await state.update_data(destination_address=message.text)
     await state.set_state(Order.writing_note)
     await message.answer(text=LEXICON.get("get_note"), reply_markup=keyboard)
@@ -231,7 +234,8 @@ async def process_fsm_destination_address(message: Message, state: FSMContext):
 
 @router.message(Order.writing_note)
 async def process_fsm_note(message: Message, state: FSMContext, session: AsyncSession):
-    await state.update_data(note=message.text)
+    if not message.text.lower() == "без пожеланий ✏️":
+        await state.update_data(note=message.text)
     user_data = await state.get_data()
 
     text = LEXICON.get("order_confirm") + "\n\n" + get_order_info(user_data)

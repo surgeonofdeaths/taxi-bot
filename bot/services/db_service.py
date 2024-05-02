@@ -44,9 +44,9 @@ async def create_user(user: Optional[UserType], chat_id: str, session: AsyncSess
 async def create_order(
     session: AsyncSession,
     user_id: int,
-    note: str,
     start_address: str,
     destination_address: str,
+    note: str | None = None,
     price: int | None = None,
     car_mark: str | None = None,
     operator_id: int | None = None,
