@@ -24,8 +24,10 @@ from services.helpcrunch import (
     create_customer,
     create_chat,
     get_customer,
+    search_chat,
 )
-from services.db_service import create_order
+from services.other import get_assignee
+from services.db_service import create_order, create_operator
 from filters.filter import validate_ukrainian_phone_number
 from db.models import User
 
@@ -146,7 +148,7 @@ async def process_order_command(
         )
     elif user:
         button_contact = KeyboardButton(
-            text=LEXICON.get("contact"),
+            text=LEXICON.get("share_contact"),
             request_contact=True,
         )
         button_cancel = KeyboardButton(text=LEXICON.get("cancel"))
@@ -183,7 +185,7 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
         )
     elif message.text.lower().startswith("нет"):
         button_contact = KeyboardButton(
-            text=LEXICON.get("contact"),
+            text=LEXICON.get("share_contact"),
             request_contact=True,
         )
 
@@ -201,7 +203,7 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
             )
         else:
             button_contact = KeyboardButton(
-                text=LEXICON.get("contact"),
+                text=LEXICON.get("share_contact"),
                 request_contact=True,
             )
 
@@ -248,6 +250,28 @@ async def process_fsm_note(message: Message, state: FSMContext, session: AsyncSe
         text=text,
         reply_markup=keyboard,
     )
+
+
+@router.message(StateFilter(None), Command(commands=["contact"]))
+@router.message(StateFilter(None), F.text.lower() == "связаться с оператором")
+async def cmd_contact(
+    message: Message,
+    state: FSMContext,
+    session: AsyncSession,
+):
+    chat = search_chat(message.from_user.id)
+    assignee = get_assignee(chat)
+    if assignee:
+        await create_operator(
+            session=session,
+            operator_id=assignee["id"],
+            email=assignee["email"],
+            name=assignee["name"],
+            role=assignee["role"],
+        )
+
+    text = LEXICON_COMMANDS.get("contact")
+    await message.answer(text=text)
 
 
 @router.message()

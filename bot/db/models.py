@@ -49,7 +49,7 @@ class Operator(Base):
     updated_at = Column(DateTime, default=datetime.utcnow)
 
     def __str__(self):
-        return f"<id={self.id}, phone={self.phone_number}>"
+        return f"<id={self.id}, phone={self.name}>"
 
 
 class Order(Base):

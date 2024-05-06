@@ -51,8 +51,7 @@ async def create_order(
     car_mark: str | None = None,
     operator_id: int | None = None,
 ):
-    # Create a new order object
-    new_order = Order(
+    order = Order(
         user_id=user_id,
         operator_id=operator_id,
         note=note,
@@ -61,4 +60,20 @@ async def create_order(
         price=price,
         car_mark=car_mark,
     )
-    await add_to_db(new_order, session)
+    await add_to_db(order, session)
+
+
+async def create_operator(
+    session: AsyncSession,
+    operator_id: int,
+    name: str,
+    email: str,
+    role: str,
+):
+    operator = Operator(
+        id=operator_id,
+        name=name,
+        email=email,
+        role=role,
+    )
+    await add_to_db(operator, session)
