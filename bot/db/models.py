@@ -31,7 +31,7 @@ class User(Base):
     phone_number = Column(String(length=255), nullable=True)
     admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow())
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __str__(self):
         return f"{self.__class__.__name__}<id={self.id}, username={self.username}>"
@@ -46,7 +46,7 @@ class Operator(Base):
     role = Column(String(255))  # TODO: enum type
     # phone_number = Column(String(length=255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow())
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __str__(self):
         return f"<id={self.id}, phone={self.name}>"
@@ -66,7 +66,7 @@ class Order(Base):
     # number_of_people = Column(Integer, nullable=True)  # TODO: do I need this field?
     car_mark = Column(CHAR(length=256))
     created_at = Column(DateTime, default=datetime.utcnow())
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", backref="orders")
     operator = relationship("Operator", backref="orders")
