@@ -1,5 +1,5 @@
 from aiogram import Bot, Dispatcher
-from handlers import handler
+from handlers import handler, order, user_misspell
 from aiogram.client.bot import DefaultBotProperties
 from config.config import settings
 from db.database import sessionmaker
@@ -29,6 +29,9 @@ async def main():
     dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))
 
     dp.include_router(handler.router)
+    dp.include_router(order.router)
+    dp.include_router(user_misspell.router)
+
     logger.info("Bot started successfuly!")
 
     await set_main_menu(bot)
