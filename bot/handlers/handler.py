@@ -16,7 +16,7 @@ from keyboards.keyboard import get_kb_markup, get_menu_kb
 from loguru import logger
 from services import create_user
 from sqlalchemy.ext.asyncio import AsyncSession
-from states.order_state import Order
+from states.state import Order
 from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
 from services.helpcrunch import (
     send_message,
@@ -26,19 +26,22 @@ from services.helpcrunch import (
     get_customer,
     search_chat,
 )
-from services.other import get_assignee
+from services.helpcrunch import get_assignee
+from services.other import wait_for_operator
 from services.db_service import create_order, create_operator
 from filters.filter import validate_ukrainian_phone_number
 from db.models import User
+import asyncio
 
 router = Router()
 
 
-@router.message(Command(commands=["start"]))
+@router.message(StateFilter(None), Command(commands=["start"]))
 async def cmd_start(message: Message, session: AsyncSession):
     kb = get_menu_kb()
     customer = get_customer(message.from_user.id)
-    if customer and not customer.get("errors"):
+    if customer and customer.get("data"):
+        logger.info(customer)
         chat = customer["data"][0]
     else:
         customer = create_customer(message.from_user.id, message.from_user.full_name)
@@ -78,7 +81,6 @@ async def process_fsm_confirmation(
     logger.info(user_data)
 
     user = await session.get(User, message.from_user.id)
-    print(user)
     user.phone_number = user_data["phone_number"]
     await session.commit()
 
@@ -98,11 +100,25 @@ async def process_fsm_confirmation(
 
     kb = get_menu_kb()
 
+    # await state.set_state(Order.waiting_for_operator)
     await state.clear()
+    asyncio.create_task(wait_for_operator(message, state, session))
     await message.answer(
         text=LEXICON.get("end_order"),
         reply_markup=kb,
     )
+
+
+# @router.message(Order.waiting_for_operator)
+async def process_fsm_waiting_for_operator(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    logger.info("waiting for operator")
+    while True:
+        await asyncio.sleep(4)
+        await message.answer(
+            text=LEXICON.get("end_order"),
+        )
 
 
 @router.message(Order.confirmation)

@@ -1,43 +1,44 @@
 import requests
 from loguru import logger
+import asyncio
+from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
+from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardMarkup
+from aiogram.fsm.context import FSMContext
+from sqlalchemy.ext.asyncio import AsyncSession
+from services.helpcrunch import search_chat, get_assignee
+from services.db_service import create_operator
+from db.models import Order
+from sqlalchemy import select
+
+from keyboards.keyboard import get_kb_markup, get_menu_kb
 
 
-def build_url(*parts):
-    return "/".join(s.strip("/") for s in parts)
+async def wait_for_operator(message: Message, state: FSMContext, session: AsyncSession):
+    logger.info("Waiting for operator")
 
+    while True:
+        chat = search_chat(message.from_user.id)
+        assignee = get_assignee(chat)
+        if assignee:
+            await create_operator(
+                session=session,
+                operator_id=assignee["id"],
+                email=assignee["email"],
+                name=assignee["name"],
+                role=assignee["role"],
+            )
 
-def request_by_method(url, headers, method: str = "get", json: dict | None = None):
-    response = None
+            orders = select(Order).order_by(Order.id.desc())
+            result = await session.execute(orders)
+            order = result.first()[0]
+            logger.info(order)
+            order.operator_id = assignee["id"]
 
-    if method.lower() == "get":
-        response = requests.get(url, headers=headers)
-    elif method.lower() == "post":
-        response = requests.post(url, json=json, headers=headers)
-    elif method.lower() == "patch":
-        response = requests.patch(url, headers=headers, data=None)
-    elif method.lower() == "put":
-        response = requests.put(url, headers=headers, data=None)
-    elif method.lower() == "delete":
-        response = requests.delete(url, headers=headers)
-    return response
+            kb = get_menu_kb()
 
-
-def request_url(url, headers, method: str = "get", json: dict | None = None) -> dict:
-    try:
-        response = request_by_method(url, headers, method, json)
-
-        if response.status_code in (200, 201):
-            logger.success(f"Request successful! status code: {response.status_code}")
+            await session.commit()
+            await state.clear()
+            await message.answer(text=LEXICON.get("found_operator"), reply_markup=kb)
+            break
         else:
-            logger.error(f"Request failed with status code: {response.status_code}")
-        return response.json()
-    except Exception as e:
-        logger.error(f"An error occurred: {e}")
-
-
-def get_assignee(chat: dict):
-    try:
-        assignee = chat["data"][0]["assignee"]
-        return assignee
-    except KeyError as e:
-        return e
+            await asyncio.sleep(10)

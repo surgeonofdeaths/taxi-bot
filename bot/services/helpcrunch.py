@@ -4,7 +4,7 @@ import os
 from typing import Any
 
 from loguru import logger
-from .other import build_url, request_url
+from .request import build_url, request_url
 
 URL = "https://api.helpcrunch.com/v1"
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
@@ -99,6 +99,14 @@ def search_chat(user_id: str):
     url = build_url(URL, "chats", "search")
     request = request_url(url, HEADERS, method="post", json=filter)
     return request
+
+
+def get_assignee(chat: dict):
+    try:
+        assignee = chat["data"][0]["assignee"]
+        return assignee
+    except KeyError as e:
+        return e
 
 
 if __name__ == "__main__":
