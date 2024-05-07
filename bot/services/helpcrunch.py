@@ -5,6 +5,7 @@ from typing import Any
 
 from loguru import logger
 from .request import build_url, request_url
+from db.models import Order
 
 URL = "https://api.helpcrunch.com/v1"
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
@@ -45,15 +46,6 @@ def search_customer(telegram_id: str | int):
     url = build_url(URL, "customers", "search")
     request = request_url(url, HEADERS, method="post", json=filter)
     return request
-
-
-def get_order_info(user_data: dict[str, Any]) -> str:
-    note = f"\nПожелание: {user_data['note']}" if user_data.get("note") else ""
-    text = (
-        f"Номер телефона: {user_data['phone_number']}\nНачальный адрес: {user_data['start_address']}\nАдрес прибытия: {user_data['destination_address']}"
-        + note
-    )
-    return text
 
 
 def create_customer(user_id: str, name: str):

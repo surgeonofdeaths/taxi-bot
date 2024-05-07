@@ -77,3 +77,14 @@ async def create_operator(
         role=role,
     )
     await add_to_db(operator, session)
+
+
+async def check_unprocessed_orders(telegram_id: str, session) -> None | Order:
+    any_unprocessed_order_query = select(Order).where(
+        Order.user_id == telegram_id,
+        Order.processed == False,  # noqa
+    )
+    any_unprocessed_orders = await session.execute(any_unprocessed_order_query)
+    any_unprocessed_order = any_unprocessed_orders.first()
+    if any_unprocessed_order:
+        return any_unprocessed_order[0]

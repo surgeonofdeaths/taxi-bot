@@ -7,7 +7,7 @@ class Order(StatesGroup):
     writing_destination_address = State()
     writing_note = State()
     confirmation = State()
-    # waiting_for_operator = State()
+    cancel_or_leave = State()
 
 
 class Conversation(StatesGroup):

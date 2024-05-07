@@ -58,13 +58,14 @@ def get_kb_markup(
     return kb_markup.as_markup(resize_keyboard=True)
 
 
-def get_menu_kb():
-    buttons = [
+def get_menu_kb(*extra_btns):
+    btns = [
         KeyboardButton(text=LEXICON_COMMANDS.get("order")),
-        KeyboardButton(text=LEXICON_COMMANDS.get("contact")),
         KeyboardButton(text=LEXICON_COMMANDS.get("help")),
     ]
-    kb = get_kb_markup(*buttons)
+    if extra_btns:
+        btns.extend(*extra_btns)
+    kb = get_kb_markup(*btns)
     return kb
 
 
