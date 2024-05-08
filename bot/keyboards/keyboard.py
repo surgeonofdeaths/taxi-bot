@@ -60,17 +60,15 @@ def get_kb_markup(
 
 def get_menu_kb(*extra_btns, has_order: bool = False, has_operator: bool = False):
     btns = []
-
     if has_order:
-        order_btn = KeyboardButton(text=LEXICON_COMMANDS.get("my_order"))
+        order_type = "my_order"
     else:
-        order_btn = KeyboardButton(text=LEXICON_COMMANDS.get("order"))
-    btns.append(order_btn)
+        order_type = "order"
+
+    btns.append(KeyboardButton(text=LEXICON_COMMANDS.get(order_type)))
 
     if has_operator:
-        contact_btn = KeyboardButton(text=LEXICON_COMMANDS.get("contact"))
-        btns.append(contact_btn)
-
+        btns.append(KeyboardButton(text=LEXICON_COMMANDS["contact"]))
     if extra_btns:
         btns.extend(*extra_btns)
     btns.append(KeyboardButton(text=LEXICON_COMMANDS.get("help")))

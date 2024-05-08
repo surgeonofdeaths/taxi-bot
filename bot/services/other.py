@@ -8,7 +8,7 @@ from services.helpcrunch import search_chat, get_assignee
 from services.db_service import create_operator
 from db.models import Order
 from sqlalchemy import select
-from states.state import Conversation
+from states.state import Conversation, StartData
 
 from keyboards.keyboard import get_menu_kb
 
@@ -19,7 +19,9 @@ def check_for_operator(telegram_id: int) -> None | dict:
     return assignee
 
 
-async def wait_for_operator(message: Message, state: FSMContext, session: AsyncSession) -> None:
+async def wait_for_operator(
+    message: Message, state: FSMContext, session: AsyncSession
+) -> None:
     logger.info("Waiting for operator")
 
     while True:
@@ -40,10 +42,12 @@ async def wait_for_operator(message: Message, state: FSMContext, session: AsyncS
             logger.info(order)
             order.operator_id = assignee["id"]
 
-            kb = get_menu_kb(has_operator=True)
+            contact_btn = KeyboardButton(text=LEXICON_COMMANDS.get("contact"))
+            kb = get_menu_kb([contact_btn], has_order=True)
 
             await session.commit()
-            await state.clear()
+            await state.set_state(StartData.start)
+            await state.update_data(has_operator=True)
             await message.answer(text=LEXICON.get("found_operator"), reply_markup=kb)
             break
         else:
@@ -54,9 +58,9 @@ def get_order_info(
     user_data: dict[str, any] | None = None, order_obj: Order | None = None
 ) -> str:
     if user_data:
-        phone_number = user_data['phone_number']
-        start_address = user_data['start_address']
-        destination_address = user_data['destination_address']
+        phone_number = user_data["phone_number"]
+        start_address = user_data["start_address"]
+        destination_address = user_data["destination_address"]
         note = f"\nПожелание: {user_data['note']}" if user_data.get("note") else ""
     elif order_obj:
         phone_number = order_obj.user.phone_number

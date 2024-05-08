@@ -24,21 +24,21 @@ async def add_to_db(item, session: AsyncSession):
         return False
 
 
-async def create_user(user: Optional[UserType], chat_id: str, session: AsyncSession):
-    chat = search_customer(user.id)
-    logger.info(chat)
-    logger.info(user.id)
-    customer_id = chat["data"][0]["id"]
-    username = user.username if user.username else "no_username"
-    user_entity = User(
-        id=user.id,
-        customer_id=str(customer_id),
-        chat_id=str(chat_id),
-        first_name=user.first_name,
-        last_name=user.last_name,
-        username=username,
-    )
-    await add_to_db(user_entity, session)
+# async def create_user(user: Optional[UserType], chat_id: str, session: AsyncSession):
+#     chat = search_customer(user.id)
+#     logger.info(chat)
+#     logger.info(user.id)
+#     customer_id = chat["data"][0]["id"]
+#     username = user.username if user.username else "no_username"
+#     user_entity = User(
+#         id=user.id,
+#         customer_id=str(customer_id),
+#         chat_id=str(chat_id),
+#         first_name=user.first_name,
+#         last_name=user.last_name,
+#         username=username,
+#     )
+    # await add_to_db(user_entity, session)
 
 
 async def create_order(
@@ -88,20 +88,33 @@ async def get_unprocessed_order(telegram_id: str, session) -> None | Order:
         return any_unprocessed_order[0]
 
 
-async def get_or_create(session: AsyncSession, model, **kwargs):
-    kwargs["chat_id"] = str(kwargs["id"])
-    instance = select(model).filter_by(**kwargs)
-    print(kwargs)
-    instance = await session.execute(instance)
-    print(instance)
-    instance = instance.first()
+def get_user_filter(**kwargs) -> dict:
+    user = kwargs["user"]
+    chat = search_customer(user.id)
+    customer_id = chat["data"][0]["id"]
+    username = user.username if user.username else "no_username"
+    filter = {}
+    filter["id"] = user.id
+    filter["username"] = username
+    filter["first_name"] = user.first_name
+    filter["last_name"] = user.last_name
+    filter["customer_id"] = str(customer_id)
+    filter["chat_id"] = str(kwargs["chat_id"])
+    logger.info(filter)
+    return filter
+
+
+async def get_or_create(session: AsyncSession, model, filter: dict):
+    query = select(model).filter_by(**filter)
+    instance = await session.execute(query)
+    instance = instance.first()[0]
     print(instance)
     if instance:
         logger.info("instance")
         return instance
     else:
-        instance = model(**kwargs)
+        instance = model(**filter)
         session.add(instance)
-        session.commit()
+        await session.commit()
         logger.info("create")
         return instance

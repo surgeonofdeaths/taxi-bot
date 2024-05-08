@@ -31,26 +31,33 @@ router = Router()
 )
 async def process_fsm_cancel(message: Message, state: FSMContext):
     kb = get_menu_kb()
-    await state.clear()
+
+    await state.set_state(StartData.start)
     await message.answer(text=LEXICON.get("user_stop_order"), reply_markup=kb)
 
 
 @router.message(StateFilter(Order.cancel_or_keep), F.text == LEXICON["cancel_order"])
 async def process_fsm_cancel_order(message: Message, state: FSMContext, session: AsyncSession):
-    order = await state.get_data()
-    order = order["unprocessed_order"]
+    state_data = await state.get_data()
+    order = state_data["unprocessed_order"]
     await session.delete(order)
     await session.commit()
-    # TODO: delete message from helpcrunch
-    kb = get_menu_kb()
-    await state.clear()
+    # TODO: delete message from helpcrunch or send notifier
+    kb = get_menu_kb(has_order=state_data.get("has_order"), has_operator=state_data.get("has_operator"))
+    task = state_data.get("task_wait_for_operator")
+    if task:
+        task.cancel()
+    await state.set_state(StartData.start)
+    await state.update_data(has_order=False)
     await message.answer(text=LEXICON["order_deleted"], reply_markup=kb)
 
 
 @router.message(StateFilter(Order.cancel_or_keep), F.text == LEXICON["keep_order"])
 async def process_fsm_keep_order(message: Message, state: FSMContext):
-    kb = get_menu_kb(has_order=True)
-    await state.clear()
+    state_data = await state.get_data()
+    kb = get_menu_kb(has_order=True, has_operator=state_data.get("has_operator"))
+    await state.update_data(has_order=True)
+    await state.set_state(StartData.start)
     await message.answer(text=LEXICON["order_kept"], reply_markup=kb)
 
 
@@ -59,12 +66,12 @@ async def process_fsm_keep_order(message: Message, state: FSMContext):
 async def process_fsm_confirmation(
     message: Message, state: FSMContext, session: AsyncSession
 ):
-    user_data = await state.get_data()
-    text = get_order_info(user_data)
-    logger.info(user_data)
+    state_data = await state.get_data()
+    text = get_order_info(state_data)
+    logger.info(state_data)
 
     user = await session.get(User, message.from_user.id)
-    user.phone_number = user_data["phone_number"]
+    user.phone_number = state_data["phone_number"]
     await session.commit()
 
     chat_id = user.chat_id
@@ -76,16 +83,19 @@ async def process_fsm_confirmation(
     await create_order(
         session,
         user_id=message.from_user.id,
-        start_address=user_data["start_address"],
-        destination_address=user_data["destination_address"],
-        note=user_data.get("note"),
+        start_address=state_data["start_address"],
+        destination_address=state_data["destination_address"],
+        note=state_data.get("note"),
         message_id=created_message["id"],
     )
 
-    kb = get_menu_kb(has_order=True)
+    kb = get_menu_kb(has_order=True, has_operator=state_data.get("has_operator"))
 
-    await state.clear()
-    asyncio.create_task(wait_for_operator(message, state, session))
+    if not state_data.get("has_operator"):
+        task = asyncio.create_task(wait_for_operator(message, state, session))
+        await state.update_data(task_wait_for_operator=task)
+    await state.set_state(StartData.start)
+    await state.update_data(has_order=True)
     await message.answer(
         text=LEXICON.get("end_order"),
         reply_markup=kb,
