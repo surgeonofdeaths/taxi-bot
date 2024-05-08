@@ -10,11 +10,12 @@ from lexicon.lexicon import LEXICON
 from services.helpcrunch import (
     send_message,
 )
-from services.other import wait_for_operator, check_for_operator
+from services.other import check_for_operator
 from services.db_service import create_order
 from db.models import User
 import asyncio
 from lexicon.lexicon import LEXICON_COMMANDS
+from services.tasks import get_replies_from_operator
 
 router = Router()
 
@@ -34,21 +35,20 @@ async def process_fsm_conversation_start(
         kb = get_kb_markup(*buttons)
         logger.info(kb)
 
-        await message.answer(text=LEXICON["operator_conv"], kb=kb)
+        chat_id = state_data["user"].chat_id
+        json = {"chat": chat_id, "text": LEXICON["user_started_conv_with_operator"], "type": "message"}
+        logger.info(json)
+        send_message(json)
+
+        task = asyncio.create_task(get_replies_from_operator(message, state, session))
+        await state.update_data(task_replies_from_operator=task)
+
+        await message.answer(text=LEXICON["operator_conv"], reply_markup=kb)
         await state.set_state(Conversation.conversation)
     else:
         # TODO: give phone numbers to the user
         text = "no contacts"
         await message.answer(text=text)
-
-
-@router.message(Conversation.conversation, F.text == LEXICON["operator_conv"])
-async def process_fsm_conversation(
-    message: Message,
-    state: FSMContext,
-    session: AsyncSession,
-):
-    await message.answer(text="sfsdf")
 
 
 @router.message(Conversation.conversation, Command(commands=["stop"]))
@@ -58,5 +58,29 @@ async def process_fsm_stop_conversation(
     state: FSMContext,
     session: AsyncSession,
 ):
-    state.set_state(StartData.start)
-    await message.answer(text=LEXICON["conv_stopped"])
+    await state.set_state(StartData.start)
+    state_data = await state.get_data()
+
+    task = state_data["task_replies_from_operator"]
+    if task:
+        task.cancel()
+
+    chat_id = state_data["user"].chat_id
+    json = {"chat": chat_id, "text": LEXICON["user_stopped_conv_with_operator"], "type": "message"}
+    send_message(json)
+    kb = get_menu_kb(has_order=state_data.get("has_order"), has_operator=state_data.get("has_operator"))
+    await message.answer(text=LEXICON["conv_stopped"], reply_markup=kb)
+
+
+@router.message(Conversation.conversation)
+async def process_fsm_conversation(
+    message: Message,
+    state: FSMContext,
+    session: AsyncSession,
+):
+    state_data = await state.get_data()
+    chat_id = state_data["user"].chat_id
+    user_json = {"chat": chat_id, "text": message.text, "type": "message"}
+    created_message = send_message(user_json)
+    logger.info(created_message)
+    # await message.answer(text="sfsdf")

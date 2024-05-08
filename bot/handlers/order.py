@@ -10,7 +10,8 @@ from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
 from services.helpcrunch import (
     send_message,
 )
-from services.other import wait_for_operator, get_order_info
+from services.other import get_order_info
+from services.tasks import wait_for_operator
 from services.db_service import create_order, get_unprocessed_order
 from filters.filter import validate_ukrainian_phone_number
 from db.models import User
@@ -30,7 +31,8 @@ router = Router()
     F.text == LEXICON["stop_order"],
 )
 async def process_fsm_cancel(message: Message, state: FSMContext):
-    kb = get_menu_kb()
+    state_data = await state.get_data()
+    kb = get_menu_kb(has_order=state_data.get("has_order"), has_operator=state_data.get("has_operator"))
 
     await state.set_state(StartData.start)
     await message.answer(text=LEXICON.get("user_stop_order"), reply_markup=kb)
@@ -47,6 +49,12 @@ async def process_fsm_cancel_order(message: Message, state: FSMContext, session:
     task = state_data.get("task_wait_for_operator")
     if task:
         task.cancel()
+
+    chat_id = state_data["user"].chat_id
+    json = {"chat": chat_id, "text": LEXICON["send_operator_cancel_order"], "type": "message"}
+    logger.info(json)
+    created_message = send_message(json)
+    logger.info(created_message)
     await state.set_state(StartData.start)
     await state.update_data(has_order=False)
     await message.answer(text=LEXICON["order_deleted"], reply_markup=kb)

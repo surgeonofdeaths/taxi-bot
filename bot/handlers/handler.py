@@ -38,6 +38,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         if customer and customer.get("data"):
             chat = customer["data"][0]
         else:
+            print(customer)
             customer = create_customer(message.from_user.id, message.from_user.full_name)
             chat = create_chat(customer["id"])
 
