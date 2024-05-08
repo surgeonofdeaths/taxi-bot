@@ -26,10 +26,15 @@ class DatabaseSettings(BaseSettings):
     url: str
 
 
+class HelpcrunchSettings(BaseSettings):
+    bearer_token: str
+
+
 class Settings(BaseSettings):
     bot: BotSettings
     logging: Logging
     db: DatabaseSettings
+    helpcrunch: HelpcrunchSettings
 
 
 settings: Settings = Settings.parse_file(

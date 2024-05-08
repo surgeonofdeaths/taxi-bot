@@ -20,5 +20,8 @@
     "port": "5432",
     "database": "taxibot",
     "url": ""
+  },
+  "helpcrunch": {
+    "bearer_token": "token"
   }
 }
