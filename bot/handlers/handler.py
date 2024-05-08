@@ -3,7 +3,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from keyboards.keyboard import get_menu_kb
-from loguru import logger
+# from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from lexicon.lexicon import LEXICON_COMMANDS
 from services.helpcrunch import (
@@ -17,6 +17,7 @@ from services.helpcrunch import get_assignee
 from services.db_service import create_operator, get_or_create, get_user_filter
 from states.state import StartData
 from db.models import User
+from services.other import check_for_operator
 
 router = Router()
 
@@ -24,15 +25,17 @@ router = Router()
 @router.message(StateFilter(None), Command(commands=["start"]))
 @router.message(StartData.start, Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
-    # TODO: check if state has needed data, if has don't execute commands below
-
     state_data = await state.get_data()
+    if not state_data.get("has_operator"):
+        # logger.info(state_data.get("has_operator"))
+        check = check_for_operator(message.from_user.id)
+        if check:
+            # logger.info(check)
+            await state.update_data(has_operator=True)
 
     if not any([state_data.get("customer"), state_data.get("chat"), state_data.get("user")]):
         customer = get_customer(message.from_user.id)
         if customer and customer.get("data"):
-            logger.info(customer)
-
             chat = customer["data"][0]
         else:
             customer = create_customer(message.from_user.id, message.from_user.full_name)
@@ -48,10 +51,6 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
             filter,
         )
         await state.update_data(customer=customer, chat=chat, user=user)
-    # state_data = await state.get_data()
-    # if state_data["order"]:
-    #     await state.update_data(has_order=True)
-
     kb = get_menu_kb(has_order=state_data.get("has_order"), has_operator=state_data.get("has_operator"))
     await state.set_state(StartData.start)
     await message.answer(
