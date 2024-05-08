@@ -62,9 +62,10 @@ class Order(Base):
     processed = Column(Boolean, default=False, nullable=False)
     start_address = Column(CHAR(length=256), nullable=False)
     destination_address = Column(CHAR(length=256), nullable=False)
-    price = Column(Integer, nullable=True)
+    message_id = Column(Integer, nullable=False)
+    # price = Column(Integer, nullable=True)
     # number_of_people = Column(Integer, nullable=True)  # TODO: do I need this field?
-    car_mark = Column(CHAR(length=256))
+    # car_mark = Column(CHAR(length=256))
     created_at = Column(DateTime, default=datetime.utcnow())
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
