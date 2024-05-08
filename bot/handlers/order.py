@@ -5,13 +5,13 @@ from aiogram.types import KeyboardButton, Message
 from keyboards.keyboard import get_kb_markup, get_menu_kb
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from states.state import Order
+from states.state import Order, StartData
 from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
 from services.helpcrunch import (
     send_message,
 )
 from services.other import wait_for_operator, get_order_info
-from services.db_service import create_order, check_unprocessed_orders
+from services.db_service import create_order, get_unprocessed_order
 from filters.filter import validate_ukrainian_phone_number
 from db.models import User
 import asyncio
@@ -19,7 +19,6 @@ import asyncio
 router = Router()
 
 
-# TODO: more elegant way to cancel order
 @router.message(
     StateFilter(
         Order.confirmation,
@@ -28,13 +27,31 @@ router = Router()
         Order.writing_start_address,
         Order.writing_note,
     ),
-    Command(commands=["cancel_order"]),
+    F.text == LEXICON["stop_order"],
 )
-@router.message(F.text == LEXICON["cancel_order"])
 async def process_fsm_cancel(message: Message, state: FSMContext):
     kb = get_menu_kb()
     await state.clear()
-    await message.answer(text=LEXICON.get("user_cancel_order"), reply_markup=kb)
+    await message.answer(text=LEXICON.get("user_stop_order"), reply_markup=kb)
+
+
+@router.message(StateFilter(Order.cancel_or_keep), F.text == LEXICON["cancel_order"])
+async def process_fsm_cancel_order(message: Message, state: FSMContext, session: AsyncSession):
+    order = await state.get_data()
+    order = order["unprocessed_order"]
+    await session.delete(order)
+    await session.commit()
+    # TODO: delete message from helpcrunch
+    kb = get_menu_kb()
+    await state.clear()
+    await message.answer(text=LEXICON["order_deleted"], reply_markup=kb)
+
+
+@router.message(StateFilter(Order.cancel_or_keep), F.text == LEXICON["keep_order"])
+async def process_fsm_keep_order(message: Message, state: FSMContext):
+    kb = get_menu_kb(has_order=True)
+    await state.clear()
+    await message.answer(text=LEXICON["order_kept"], reply_markup=kb)
 
 
 @router.message(Order.confirmation, Command(commands=["confirm"]))
@@ -62,11 +79,11 @@ async def process_fsm_confirmation(
         start_address=user_data["start_address"],
         destination_address=user_data["destination_address"],
         note=user_data.get("note"),
+        message_id=created_message["id"],
     )
 
-    kb = get_menu_kb()
+    kb = get_menu_kb(has_order=True)
 
-    # await state.set_state(Order.waiting_for_operator)
     await state.clear()
     asyncio.create_task(wait_for_operator(message, state, session))
     await message.answer(
@@ -79,7 +96,7 @@ async def process_fsm_confirmation(
 async def process_fsm_fail_confirmation(
     message: Message, state: FSMContext, session: AsyncSession
 ):
-    button_cancel = KeyboardButton(text=LEXICON.get("cancel_order"))
+    button_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
     button_confirm = KeyboardButton(text=LEXICON.get("confirm"))
     keyboard = get_kb_markup(button_confirm, button_cancel)
 
@@ -89,12 +106,13 @@ async def process_fsm_fail_confirmation(
     )
 
 
-@router.message(StateFilter(None), Command(commands=["order"]))
-@router.message(StateFilter(None), F.text == LEXICON_COMMANDS["order"])
+@router.message(StartData.start, Command(commands=["order"]))
+@router.message(StartData.start, F.text == LEXICON_COMMANDS["order"])
+@router.message(StartData.start, F.text == LEXICON_COMMANDS["my_order"])
 async def process_order_command(
     message: Message, state: FSMContext, session: AsyncSession
 ):
-    any_unprocessed_order = await check_unprocessed_orders(
+    any_unprocessed_order = await get_unprocessed_order(
         message.from_user.id, session
     )
     user = await session.get(User, message.from_user.id)
@@ -102,11 +120,17 @@ async def process_order_command(
         print(any_unprocessed_order)
         buttons = [
             KeyboardButton(text=LEXICON["cancel_order"]),
+            KeyboardButton(text=LEXICON["keep_order"]),
         ]
         kb = get_kb_markup(*buttons)
 
-        text = LEXICON["has_order"] + "\n\n" \
+        text = (
+            LEXICON["has_order"]
+            + "\n\n"
             + get_order_info(order_obj=any_unprocessed_order)
+        )
+        await state.set_state(Order.cancel_or_keep)
+        await state.update_data(unprocessed_order=any_unprocessed_order)
         await message.answer(
             text=text,
             reply_markup=kb,
@@ -114,7 +138,7 @@ async def process_order_command(
     elif user and user.phone_number:
         button_yes = KeyboardButton(text=LEXICON.get("btn_yes"))
         button_no = KeyboardButton(text=LEXICON.get("btn_no"))
-        button_cancel = KeyboardButton(text=LEXICON.get("cancel_order"))
+        button_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
         keyboard = get_kb_markup(button_yes, button_no, button_cancel)
 
         await state.set_state(Order.getting_phone)
@@ -127,7 +151,7 @@ async def process_order_command(
             text=LEXICON.get("share_contact"),
             request_contact=True,
         )
-        button_cancel = KeyboardButton(text=LEXICON.get("cancel_order"))
+        button_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
         keyboard = get_kb_markup(button_contact, button_cancel)
         await message.answer(
             LEXICON.get("order"),
@@ -143,7 +167,7 @@ async def process_order_command(
 @router.message(Order.getting_phone)
 async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncSession):
     # TODO: Should the bot allow others contacts?
-    button_cancel = KeyboardButton(text=LEXICON.get("cancel_order"))
+    button_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
 
     if message.contact or message.text.lower().startswith("да"):
         keyboard = get_kb_markup(button_cancel)
@@ -191,7 +215,7 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
 
 @router.message(Order.writing_start_address)
 async def process_fsm_start_address(message: Message, state: FSMContext):
-    button_cancel = KeyboardButton(text=LEXICON.get("cancel_order"))
+    button_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
     keyboard = get_kb_markup(button_cancel)
     await state.update_data(start_address=message.text)
     await state.set_state(Order.writing_destination_address)
@@ -202,7 +226,7 @@ async def process_fsm_start_address(message: Message, state: FSMContext):
 
 @router.message(Order.writing_destination_address)
 async def process_fsm_destination_address(message: Message, state: FSMContext):
-    btn_cancel = KeyboardButton(text=LEXICON.get("cancel_order"))
+    btn_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
     btn_no_note = KeyboardButton(text=LEXICON.get("no_note"))
     keyboard = get_kb_markup(btn_no_note, btn_cancel)
     await state.update_data(destination_address=message.text)
@@ -221,7 +245,7 @@ async def process_fsm_note(
     user_data = await state.get_data()
 
     text = LEXICON.get("order_confirm") + "\n\n" + get_order_info(user_data)
-    button_cancel = KeyboardButton(text=LEXICON.get("cancel_order"))
+    button_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
     button_confirm = KeyboardButton(text=LEXICON.get("confirm"))
     keyboard = get_kb_markup(button_confirm, button_cancel)
 

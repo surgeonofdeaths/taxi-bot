@@ -46,9 +46,8 @@ async def create_order(
     user_id: int,
     start_address: str,
     destination_address: str,
+    message_id: int,
     note: str | None = None,
-    price: int | None = None,
-    car_mark: str | None = None,
     operator_id: int | None = None,
 ):
     order = Order(
@@ -57,8 +56,7 @@ async def create_order(
         note=note,
         start_address=start_address,
         destination_address=destination_address,
-        price=price,
-        car_mark=car_mark,
+        message_id=message_id,
     )
     await add_to_db(order, session)
 
@@ -79,7 +77,7 @@ async def create_operator(
     await add_to_db(operator, session)
 
 
-async def check_unprocessed_orders(telegram_id: str, session) -> None | Order:
+async def get_unprocessed_order(telegram_id: str, session) -> None | Order:
     any_unprocessed_order_query = select(Order).where(
         Order.user_id == telegram_id,
         Order.processed == False,  # noqa
@@ -88,3 +86,22 @@ async def check_unprocessed_orders(telegram_id: str, session) -> None | Order:
     any_unprocessed_order = any_unprocessed_orders.first()
     if any_unprocessed_order:
         return any_unprocessed_order[0]
+
+
+async def get_or_create(session: AsyncSession, model, **kwargs):
+    kwargs["chat_id"] = str(kwargs["id"])
+    instance = select(model).filter_by(**kwargs)
+    print(kwargs)
+    instance = await session.execute(instance)
+    print(instance)
+    instance = instance.first()
+    print(instance)
+    if instance:
+        logger.info("instance")
+        return instance
+    else:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+        logger.info("create")
+        return instance

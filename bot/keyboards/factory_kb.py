@@ -1,4 +1,4 @@
-from aiogram.filters.callback_data import CallbackData
+    from aiogram.filters.callback_data import CallbackData
 
 
 class TestCallbackFactory(CallbackData, prefix="test"):

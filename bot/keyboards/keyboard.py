@@ -58,13 +58,23 @@ def get_kb_markup(
     return kb_markup.as_markup(resize_keyboard=True)
 
 
-def get_menu_kb(*extra_btns):
-    btns = [
-        KeyboardButton(text=LEXICON_COMMANDS.get("order")),
-        KeyboardButton(text=LEXICON_COMMANDS.get("help")),
-    ]
+def get_menu_kb(*extra_btns, has_order: bool = False, has_operator: bool = False):
+    btns = []
+
+    if has_order:
+        order_btn = KeyboardButton(text=LEXICON_COMMANDS.get("my_order"))
+    else:
+        order_btn = KeyboardButton(text=LEXICON_COMMANDS.get("order"))
+    btns.append(order_btn)
+
+    if has_operator:
+        contact_btn = KeyboardButton(text=LEXICON_COMMANDS.get("contact"))
+        btns.append(contact_btn)
+
     if extra_btns:
         btns.extend(*extra_btns)
+    btns.append(KeyboardButton(text=LEXICON_COMMANDS.get("help")))
+    print(btns)
     kb = get_kb_markup(*btns)
     return kb
 

@@ -40,12 +40,10 @@ async def wait_for_operator(message: Message, state: FSMContext, session: AsyncS
             logger.info(order)
             order.operator_id = assignee["id"]
 
-            btn_contact = KeyboardButton(text=LEXICON_COMMANDS.get("contact"))
-            kb = get_menu_kb([btn_contact])
+            kb = get_menu_kb(has_operator=True)
 
             await session.commit()
             await state.clear()
-            # await state.set_state(Conversation.conversation)
             await message.answer(text=LEXICON.get("found_operator"), reply_markup=kb)
             break
         else:
