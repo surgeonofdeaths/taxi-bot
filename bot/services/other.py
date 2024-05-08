@@ -4,7 +4,7 @@ from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
 from aiogram.types import KeyboardButton, Message
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from services.helpcrunch import search_chat, get_assignee
+from services.helpcrunch import search_chat, get_assignee, get_message
 from services.db_service import create_operator
 from db.models import Order
 from sqlalchemy import select
@@ -17,41 +17,6 @@ def check_for_operator(telegram_id: int) -> None | dict:
     chat = search_chat(telegram_id)
     assignee = get_assignee(chat)
     return assignee
-
-
-async def wait_for_operator(
-    message: Message, state: FSMContext, session: AsyncSession
-) -> None:
-    logger.info("Waiting for operator")
-
-    while True:
-        assignee = check_for_operator(message.from_user.id)
-
-        if assignee:
-            await create_operator(
-                session=session,
-                operator_id=assignee["id"],
-                email=assignee["email"],
-                name=assignee["name"],
-                role=assignee["role"],
-            )
-
-            orders = select(Order).order_by(Order.id.desc())
-            result = await session.execute(orders)
-            order = result.first()[0]
-            logger.info(order)
-            order.operator_id = assignee["id"]
-
-            contact_btn = KeyboardButton(text=LEXICON_COMMANDS.get("contact"))
-            kb = get_menu_kb([contact_btn], has_order=True)
-
-            await session.commit()
-            await state.set_state(StartData.start)
-            await state.update_data(has_operator=True)
-            await message.answer(text=LEXICON.get("found_operator"), reply_markup=kb)
-            break
-        else:
-            await asyncio.sleep(10)
 
 
 def get_order_info(
