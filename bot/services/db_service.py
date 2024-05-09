@@ -1,13 +1,14 @@
-from aiogram.types.user import User as UserType
-from sqlalchemy import insert, select
-from db.models import User, Order, Operator
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
-from aiogram.types import Message
-from loguru import logger
-
 from typing import Optional
+
+from aiogram.types import Message
+from aiogram.types.user import User as UserType
+from db.models import Lexicon, Operator, Order
+from lexicon.lexicon import LEXICON, LEXICON_DB
+from loguru import logger
 from services.helpcrunch import search_customer
+from sqlalchemy import exists, insert, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def add_to_db(item, session: AsyncSession):
@@ -38,7 +39,7 @@ async def add_to_db(item, session: AsyncSession):
 #         last_name=user.last_name,
 #         username=username,
 #     )
-    # await add_to_db(user_entity, session)
+# await add_to_db(user_entity, session)
 
 
 async def create_order(
@@ -107,14 +108,32 @@ def get_user_filter(**kwargs) -> dict:
 async def get_or_create(session: AsyncSession, model, filter: dict):
     query = select(model).filter_by(**filter)
     instance = await session.execute(query)
-    instance = instance.first()[0]
-    print(instance)
-    if instance:
-        logger.info("instance")
+    for i in instance:
+        logger.info(i)
+    if instance and instance.first()[0]:
+        instance = instance.first()[0]
+        logger.info("Instance exists")
         return instance
     else:
         instance = model(**filter)
         session.add(instance)
         await session.commit()
-        logger.info("create")
+        logger.info("Instance created")
         return instance
+
+
+async def populate_lexicon(session: AsyncSession):
+    for key, value in LEXICON.items():
+        # dt = await session.get(Lexicon)
+        # if sessin.
+        lexicon_obj = await get_or_create(session, Lexicon, {"key": key})
+        logger.info(lexicon_obj)
+
+        #
+        #     entry = Lexicon(key=key, text=value)
+        #     session.add(entry)
+        LEXICON_DB[key] = value
+    # try:
+    #     await session.commit()
+    # except IntegrityError as e:
+    #     logger.info(e)

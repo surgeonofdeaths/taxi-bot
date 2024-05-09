@@ -5,8 +5,14 @@ from aiogram.types import Message
 from aiogram.utils.keyboard import KeyboardButton
 from db.models import User
 from keyboards.keyboard import get_menu_kb
-from lexicon.lexicon import LEXICON
-from services.db_service import create_operator, get_or_create, get_user_filter
+from lexicon.lexicon import LEXICON, LEXICON_DB
+from loguru import logger
+from services.db_service import (
+    create_operator,
+    get_or_create,
+    get_user_filter,
+    populate_lexicon,
+)
 from services.helpcrunch import (
     create_chat,
     create_customer,
@@ -15,8 +21,6 @@ from services.helpcrunch import (
     search_chat,
 )
 from services.other import check_for_operator
-
-# from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import StartData
 
@@ -62,6 +66,8 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         has_operator=state_data.get("has_operator"),
     )
     await state.set_state(StartData.start)
+    if not LEXICON_DB:
+        await populate_lexicon(session)
     await message.answer(
         LEXICON.get("command_start"),
         reply_markup=kb,
