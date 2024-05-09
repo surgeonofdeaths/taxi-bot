@@ -19,7 +19,7 @@ def get_messages(chat_id: int, message_id: int | None = None) -> dict:
 
     request = request_url(url, HEADERS, method="get")
     # message = request["data"][0]
-    messages = request["data"]
+    messages = request.get("data")
     return messages
     # if not request.get("errors") and message_id:
     #     # latest

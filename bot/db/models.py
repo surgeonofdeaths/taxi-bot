@@ -1,21 +1,22 @@
 import asyncio
 from datetime import datetime
 
-from .base import Base
-from .database import engine
 from sqlalchemy import (
     CHAR,
     BigInteger,
     Boolean,
     Column,
+    DateTime,
     ForeignKey,
     Integer,
     String,
     Text,
-    DateTime,
 )
-from sqlalchemy_utils import EmailType
 from sqlalchemy.orm import relationship
+from sqlalchemy_utils import EmailType
+
+from .base import Base
+from .database import engine
 
 
 class User(Base):
@@ -74,6 +75,13 @@ class Order(Base):
 
     def __str__(self):
         return f"{self.__class__.__name__}<id={self.id}, name={self.user_id}>"
+
+
+class Lexicon(Base):
+    __tablename__ = "lexicon"
+
+    key = Column(String, primary_key=True)
+    text = Column(String)
 
 
 # async def init_models():
