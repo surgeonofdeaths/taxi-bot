@@ -1,9 +1,10 @@
-import requests
-from loguru import logger
 import asyncio
-from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
-from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardMarkup
+
+import requests
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardMarkup
+from lexicon.lexicon import LEXICON
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -38,4 +39,3 @@ def request_url(url, headers, method: str = "get", json: dict | None = None) -> 
         return response.json()
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-

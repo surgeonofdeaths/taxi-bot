@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
 from db.models import Order
 from keyboards.keyboard import get_menu_kb
-from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
+from lexicon.lexicon import LEXICON
 from loguru import logger
 from services.db_service import create_operator
 from services.helpcrunch import get_assignee, get_messages, search_chat

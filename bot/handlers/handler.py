@@ -2,22 +2,23 @@ from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
+from aiogram.utils.keyboard import KeyboardButton
+from db.models import User
 from keyboards.keyboard import get_menu_kb
-# from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from lexicon.lexicon import LEXICON_COMMANDS
+from lexicon.lexicon import LEXICON
+from services.db_service import create_operator, get_or_create, get_user_filter
 from services.helpcrunch import (
-    create_customer,
     create_chat,
+    create_customer,
+    get_assignee,
     get_customer,
     search_chat,
 )
-from aiogram.utils.keyboard import KeyboardButton
-from services.helpcrunch import get_assignee
-from services.db_service import create_operator, get_or_create, get_user_filter
-from states.state import StartData
-from db.models import User
 from services.other import check_for_operator
+
+# from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from states.state import StartData
 
 router = Router()
 
@@ -33,13 +34,17 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
             # logger.info(check)
             await state.update_data(has_operator=True)
 
-    if not any([state_data.get("customer"), state_data.get("chat"), state_data.get("user")]):
+    if not any(
+        [state_data.get("customer"), state_data.get("chat"), state_data.get("user")]
+    ):
         customer = get_customer(message.from_user.id)
         if customer and customer.get("data"):
             chat = customer["data"][0]
         else:
             print(customer)
-            customer = create_customer(message.from_user.id, message.from_user.full_name)
+            customer = create_customer(
+                message.from_user.id, message.from_user.full_name
+            )
             chat = create_chat(customer["id"])
 
         filter = get_user_filter(
@@ -52,17 +57,20 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
             filter,
         )
         await state.update_data(customer=customer, chat=chat, user=user)
-    kb = get_menu_kb(has_order=state_data.get("has_order"), has_operator=state_data.get("has_operator"))
+    kb = get_menu_kb(
+        has_order=state_data.get("has_order"),
+        has_operator=state_data.get("has_operator"),
+    )
     await state.set_state(StartData.start)
     await message.answer(
-        LEXICON_COMMANDS.get("start"),
+        LEXICON.get("command_start"),
         reply_markup=kb,
     )
 
 
 @router.message(StartData.start, Command(commands=["help"]))
-@router.message(StartData.start, F.text == LEXICON_COMMANDS["help"])
+@router.message(StartData.start, F.text == LEXICON["command_help"])
 async def cmd_help(message: Message, state: FSMContext, session: AsyncSession):
     await message.answer(
-        text=LEXICON_COMMANDS.get("help"),
+        text=LEXICON.get("command_help"),
     )

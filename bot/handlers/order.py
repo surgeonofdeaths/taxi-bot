@@ -4,17 +4,16 @@ from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from db.models import User
 from filters.filter import validate_ukrainian_phone_number
 from keyboards.keyboard import get_kb_markup, get_menu_kb
-from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
+from lexicon.lexicon import LEXICON
+from loguru import logger
 from services.db_service import create_order, get_unprocessed_order
 from services.helpcrunch import send_message
 from services.other import get_order_info
 from services.tasks import wait_for_operator
+from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import Order, StartData
 
 router = Router()
@@ -32,29 +31,41 @@ router = Router()
 )
 async def process_fsm_cancel(message: Message, state: FSMContext):
     state_data = await state.get_data()
-    kb = get_menu_kb(has_order=state_data.get("has_order"), has_operator=state_data.get("has_operator"))
+    kb = get_menu_kb(
+        has_order=state_data.get("has_order"),
+        has_operator=state_data.get("has_operator"),
+    )
 
     await state.set_state(StartData.start)
     await message.answer(text=LEXICON.get("user_stop_order"), reply_markup=kb)
 
 
 @router.message(StateFilter(Order.cancel_or_keep), F.text == LEXICON["cancel_order"])
-async def process_fsm_cancel_order(message: Message, state: FSMContext, session: AsyncSession):
+async def process_fsm_cancel_order(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    await state.update_data(has_order=False)
     state_data = await state.get_data()
     order = state_data["unprocessed_order"]
     await session.delete(order)
     await session.commit()
-    # TODO: delete message from helpcrunch or send notifier
-    kb = get_menu_kb(has_order=state_data.get("has_order"), has_operator=state_data.get("has_operator"))
+    kb = get_menu_kb(
+        has_order=state_data.get("has_order"),
+        has_operator=state_data.get("has_operator"),
+    )
     task = state_data.get("task_wait_for_operator")
     if task:
         task.cancel()
 
     chat_id = state_data["user"].chat_id
-    json = {"chat": chat_id, "text": LEXICON["send_operator_cancel_order"], "type": "message"}
+    json = {
+        "chat": chat_id,
+        "text": LEXICON["send_operator_cancel_order"],
+        "type": "message",
+    }
     logger.info(json)
-    created_message = send_message(json)
-    logger.info(created_message)
+    notifier = send_message(json)
+    logger.info(notifier)
     await state.set_state(StartData.start)
     await state.update_data(has_order=False)
     await message.answer(text=LEXICON["order_deleted"], reply_markup=kb)
@@ -125,14 +136,12 @@ async def process_fsm_fail_confirmation(
 
 
 @router.message(StartData.start, Command(commands=["order"]))
-@router.message(StartData.start, F.text == LEXICON_COMMANDS["order"])
-@router.message(StartData.start, F.text == LEXICON_COMMANDS["my_order"])
+@router.message(StartData.start, F.text == LEXICON["command_order"])
+@router.message(StartData.start, F.text == LEXICON["command_my_order"])
 async def process_order_command(
     message: Message, state: FSMContext, session: AsyncSession
 ):
-    any_unprocessed_order = await get_unprocessed_order(
-        message.from_user.id, session
-    )
+    any_unprocessed_order = await get_unprocessed_order(message.from_user.id, session)
     user = await session.get(User, message.from_user.id)
     if any_unprocessed_order:
         print(any_unprocessed_order)

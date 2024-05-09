@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
 from db.models import User
 from keyboards.keyboard import get_kb_markup, get_menu_kb
-from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
+from lexicon.lexicon import LEXICON
 from loguru import logger
 from services.db_service import create_order
 from services.helpcrunch import send_message
@@ -19,7 +19,7 @@ router = Router()
 
 
 @router.message(StartData.start, Command(commands=["contact"]))
-@router.message(StartData.start, F.text == LEXICON_COMMANDS["contact"])
+@router.message(StartData.start, F.text == LEXICON["command_contact"])
 async def process_fsm_conversation_start(
     message: Message,
     state: FSMContext,

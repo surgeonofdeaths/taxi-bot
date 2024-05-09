@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
 from db.models import Order
 from keyboards.keyboard import get_menu_kb
-from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
+from lexicon.lexicon import LEXICON
 from loguru import logger
 from services.db_service import create_operator
 from services.helpcrunch import get_messages
@@ -38,7 +38,7 @@ async def wait_for_operator(
             # logger.info(order)
             order.operator_id = assignee["id"]
 
-            contact_btn = KeyboardButton(text=LEXICON_COMMANDS.get("contact"))
+            contact_btn = KeyboardButton(text=LEXICON.get("command_contact"))
             kb = get_menu_kb([contact_btn], has_order=True)
 
             await session.commit()

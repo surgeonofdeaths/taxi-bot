@@ -20,15 +20,12 @@
 
 # from keyboards.factory_kb import NavigationCallbackFactory
 
-from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
 from aiogram.utils.keyboard import (
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
     InlineKeyboardBuilder,
-    KeyboardButton,
     KeyboardBuilder,
-    ReplyKeyboardMarkup,
+    KeyboardButton,
     ReplyKeyboardBuilder,
+    ReplyKeyboardMarkup,
 )
 from lexicon.lexicon import LEXICON
 
@@ -61,17 +58,17 @@ def get_kb_markup(
 def get_menu_kb(*extra_btns, has_order: bool = False, has_operator: bool = False):
     btns = []
     if has_order:
-        order_type = "my_order"
+        order_type = "command_my_order"
     else:
-        order_type = "order"
+        order_type = "command_order"
 
-    btns.append(KeyboardButton(text=LEXICON_COMMANDS.get(order_type)))
+    btns.append(KeyboardButton(text=LEXICON.get(order_type)))
 
     if has_operator:
-        btns.append(KeyboardButton(text=LEXICON_COMMANDS["contact"]))
+        btns.append(KeyboardButton(text=LEXICON["command_contact"]))
     if extra_btns:
         btns.extend(*extra_btns)
-    btns.append(KeyboardButton(text=LEXICON_COMMANDS.get("help")))
+    btns.append(KeyboardButton(text=LEXICON.get("command_help")))
     print(btns)
     kb = get_kb_markup(*btns)
     return kb
