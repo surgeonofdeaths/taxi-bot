@@ -1,10 +1,10 @@
 # from pprint import pprint
 
-from loguru import logger
-from .request import build_url, request_url
-
 # from db.models import Order
 from config.config import settings
+from loguru import logger
+
+from .request import build_url, request_url
 
 URL = "https://api.helpcrunch.com/v1"
 BEARER_TOKEN = settings.helpcrunch.bearer_token
@@ -14,12 +14,13 @@ HEADERS = {
 }
 
 
-def get_message(chat_id: int, message_id: int | None = None) -> dict:
+def get_messages(chat_id: int, message_id: int | None = None) -> dict:
     url = build_url(URL, "chats", str(chat_id), "messages")
 
     request = request_url(url, HEADERS, method="get")
-    message = request["data"][0][0]
-    return message
+    # message = request["data"][0]
+    messages = request["data"]
+    return messages
     # if not request.get("errors") and message_id:
     #     # latest
     # return request

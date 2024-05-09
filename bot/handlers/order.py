@@ -1,21 +1,21 @@
+import asyncio
+
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
-from keyboards.keyboard import get_kb_markup, get_menu_kb
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from states.state import Order, StartData
+
+from db.models import User
+from filters.filter import validate_ukrainian_phone_number
+from keyboards.keyboard import get_kb_markup, get_menu_kb
 from lexicon.lexicon import LEXICON, LEXICON_COMMANDS
-from services.helpcrunch import (
-    send_message,
-)
+from services.db_service import create_order, get_unprocessed_order
+from services.helpcrunch import send_message
 from services.other import get_order_info
 from services.tasks import wait_for_operator
-from services.db_service import create_order, get_unprocessed_order
-from filters.filter import validate_ukrainian_phone_number
-from db.models import User
-import asyncio
+from states.state import Order, StartData
 
 router = Router()
 
@@ -262,9 +262,9 @@ async def process_fsm_note(
         await state.update_data(note=message.text)
     user_data = await state.get_data()
 
-    text = LEXICON.get("order_confirm") + "\n\n" + get_order_info(user_data)
-    button_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
-    button_confirm = KeyboardButton(text=LEXICON.get("confirm"))
+    text = LEXICON["order_confirm"] + "\n\n" + get_order_info(user_data)
+    button_cancel = KeyboardButton(text=LEXICON["stop_order"])
+    button_confirm = KeyboardButton(text=LEXICON["confirm"])
     keyboard = get_kb_markup(button_confirm, button_cancel)
 
     await state.set_state(Order.confirmation)

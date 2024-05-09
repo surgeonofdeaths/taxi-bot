@@ -1,6 +1,6 @@
 from aiogram import Bot, Dispatcher
 from handlers import handler, order, user_misspell, conversation
-from aiogram.client.bot import DefaultBotProperties
+from aiogram.client.default import DefaultBotProperties
 from config.config import settings
 from db.database import sessionmaker
 from keyboards.main_menu import set_main_menu
