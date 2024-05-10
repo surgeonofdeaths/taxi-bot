@@ -35,7 +35,8 @@ LEXICON: dict[str, str] = {
     "command_my_order": "Ваш заказ 🚖",
     "command_contact": "Связаться с оператором ✍️",
     "command_help": "Информация о боте 📄",
-    "new_test": "hhihi 👉👈hihi 👉👈hihi 👉👈hihi 👉👈hihi 👉👈hihi 👉👈hihi 👉👈ihi 👉👈",
+    "only_text": "Можно отправлять только текст!",
+    # "new_test": "hhihi 👉👈hihi 👉👈hihi 👉👈hihi 👉👈hihi 👉👈hihi 👉👈hihi 👉👈ihi 👉👈",
 }
 
 # LEXICON_COMMANDS: dict[str, str] = {

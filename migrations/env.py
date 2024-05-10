@@ -1,16 +1,16 @@
 import asyncio
+import os
+import sys
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
-from bot.db.base import Base
 from bot.config.config import settings
+from bot.db.base import Base
 from bot.db.models import *
-import os
-import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -34,7 +34,7 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 config.set_main_option("sqlalchemy.url", settings.db.url)
-print(settings.db.url)
+# print(settings.db.url)
 
 
 def run_migrations_offline() -> None:

@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
 from db.models import User
 from keyboards.keyboard import get_kb_markup, get_menu_kb
-from lexicon.lexicon import LEXICON
+from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
 from services.db_service import create_order
 from services.helpcrunch import send_message
@@ -93,8 +93,11 @@ async def process_fsm_conversation(
 ):
     state_data = await state.get_data()
     chat_id = state_data["user"].chat_id
-    user_json = {"chat": chat_id, "text": message.text, "type": "message"}
-    created_message = send_message(user_json)
-    await state.update_data(most_recent_message_id_from_user=created_message["id"])
-    logger.info(created_message)
-    # await message.answer(text="sfsdf")
+    text = message.text
+    if text:
+        user_json = {"chat": chat_id, "text": text, "type": "message"}
+        created_message = send_message(user_json)
+        await state.update_data(most_recent_message_id_from_user=created_message["id"])
+        logger.info(created_message)
+    else:
+        await message.answer(text=LEXICON_DB["only_text"])

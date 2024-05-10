@@ -69,7 +69,6 @@ def get_menu_kb(*extra_btns, has_order: bool = False, has_operator: bool = False
     if extra_btns:
         btns.extend(*extra_btns)
     btns.append(KeyboardButton(text=LEXICON.get("command_help")))
-    print(btns)
     kb = get_kb_markup(*btns)
     return kb
 

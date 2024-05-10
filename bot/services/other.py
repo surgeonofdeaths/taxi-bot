@@ -15,7 +15,9 @@ from states.state import Conversation, StartData
 
 def check_for_operator(telegram_id: int) -> None | dict:
     chat = search_chat(telegram_id)
-    assignee = get_assignee(chat)
+    assignee = None
+    if chat["data"]:
+        assignee = get_assignee(chat)
     return assignee
 
 

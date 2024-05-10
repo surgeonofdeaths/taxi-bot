@@ -107,11 +107,13 @@ def get_user_filter(**kwargs) -> dict:
 
 async def get_or_create(session: AsyncSession, model, filter: dict):
     query = select(model).filter_by(**filter)
-    instance = await session.execute(query)
-    for i in instance:
-        logger.info(i)
-    if instance and instance.first()[0]:
-        instance = instance.first()[0]
+    instances = await session.execute(query)
+    logger.info(instances)
+    try:
+        instance = instances.first()[0]
+    except TypeError:
+        instance = None
+    if instance:
         logger.info("Instance exists")
         return instance
     else:
@@ -124,16 +126,5 @@ async def get_or_create(session: AsyncSession, model, filter: dict):
 
 async def populate_lexicon(session: AsyncSession):
     for key, value in LEXICON.items():
-        # dt = await session.get(Lexicon)
-        # if sessin.
-        lexicon_obj = await get_or_create(session, Lexicon, {"key": key})
-        logger.info(lexicon_obj)
-
-        #
-        #     entry = Lexicon(key=key, text=value)
-        #     session.add(entry)
+        lexicon_obj = await get_or_create(session, Lexicon, {"key": key, "text": value})
         LEXICON_DB[key] = value
-    # try:
-    #     await session.commit()
-    # except IntegrityError as e:
-    #     logger.info(e)

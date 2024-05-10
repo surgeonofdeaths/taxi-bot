@@ -31,13 +31,6 @@ router = Router()
 @router.message(StartData.start, Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     state_data = await state.get_data()
-    if not state_data.get("has_operator"):
-        # logger.info(state_data.get("has_operator"))
-        check = check_for_operator(message.from_user.id)
-        if check:
-            # logger.info(check)
-            await state.update_data(has_operator=True)
-
     if not any(
         [state_data.get("customer"), state_data.get("chat"), state_data.get("user")]
     ):
@@ -45,7 +38,6 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         if customer and customer.get("data"):
             chat = customer["data"][0]
         else:
-            print(customer)
             customer = create_customer(
                 message.from_user.id, message.from_user.full_name
             )
@@ -61,6 +53,14 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
             filter,
         )
         await state.update_data(customer=customer, chat=chat, user=user)
+
+    if not state_data.get("has_operator"):
+        # logger.info(state_data.get("has_operator"))
+        check = check_for_operator(message.from_user.id)
+        if check:
+            # logger.info(check)
+            await state.update_data(has_operator=True)
+
     kb = get_menu_kb(
         has_order=state_data.get("has_order"),
         has_operator=state_data.get("has_operator"),

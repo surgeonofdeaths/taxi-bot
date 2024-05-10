@@ -1,6 +1,3 @@
-# from pprint import pprint
-
-# from db.models import Order
 from config.config import settings
 from loguru import logger
 

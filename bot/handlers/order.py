@@ -144,7 +144,6 @@ async def process_order_command(
     any_unprocessed_order = await get_unprocessed_order(message.from_user.id, session)
     user = await session.get(User, message.from_user.id)
     if any_unprocessed_order:
-        print(any_unprocessed_order)
         buttons = [
             KeyboardButton(text=LEXICON["cancel_order"]),
             KeyboardButton(text=LEXICON["keep_order"]),

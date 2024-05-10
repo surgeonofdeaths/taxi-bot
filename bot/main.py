@@ -1,14 +1,13 @@
+import asyncio
+
 from aiogram import Bot, Dispatcher
-from handlers import handler, order, user_misspell, conversation
 from aiogram.client.default import DefaultBotProperties
 from config.config import settings
 from db.database import sessionmaker
+from handlers import conversation, handler, order, user_misspell
 from keyboards.main_menu import set_main_menu
-
 from loguru import logger
-
 from middlewares import DbSessionMiddleware
-import asyncio
 
 
 async def main():
