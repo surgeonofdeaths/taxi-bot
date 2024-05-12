@@ -3,12 +3,13 @@ from typing import Optional
 from aiogram.types import Message
 from aiogram.types.user import User as UserType
 from db.models import Lexicon, Operator, Order
-from lexicon.lexicon import LEXICON, LEXICON_DB
+from lexicon.lexicon import LEXICON_DB
 from loguru import logger
 from services.helpcrunch import search_customer
-from sqlalchemy import exists, insert, select
+from sqlalchemy import exists, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.inspection import inspect
 
 
 async def add_to_db(item, session: AsyncSession):
@@ -101,7 +102,6 @@ def get_user_filter(**kwargs) -> dict:
     filter["last_name"] = user.last_name
     filter["customer_id"] = str(customer_id)
     filter["chat_id"] = str(kwargs["chat_id"])
-    logger.info(filter)
     return filter
 
 
@@ -121,7 +121,33 @@ async def get_or_create(session: AsyncSession, model, filter: dict):
         return instance
 
 
-async def populate_lexicon(session: AsyncSession):
-    for key, value in LEXICON.items():
-        lexicon_obj = await get_or_create(session, Lexicon, {"key": key, "text": value})
+async def get_or_create_lexicon_object(session: AsyncSession, filter: dict):
+    query = select(Lexicon).where(Lexicon.key == filter["key"])
+    instance = await session.execute(query)
+    instance = instance.scalar_one_or_none()
+
+    if instance:
+        if getattr(instance, "text", None) != filter.get("text"):
+            try:
+                await session.execute(
+                    update(Lexicon)
+                    .where(Lexicon.key == filter["key"])
+                    .values(text=filter["text"])
+                )
+                logger.info(instance)
+                await session.commit()
+            except IntegrityError:
+                logger.exception("Integrity error occurred during update")
+    else:
+        instance = Lexicon(**filter)
+        session.add(instance)
+        await session.commit()
+    return instance
+
+
+async def populate_lexicon(session: AsyncSession, lexicon: dict):
+    for key, value in lexicon.items():
+        lexicon_obj = await get_or_create_lexicon_object(
+            session, {"key": key, "text": value}
+        )
         LEXICON_DB[key] = value

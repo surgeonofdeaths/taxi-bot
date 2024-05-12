@@ -14,6 +14,7 @@ router = Router()
 
 
 @router.message(StartData.start, IsAdmin(), Command(commands=["admin"]))
+@router.message(StartData.start, IsAdmin(), F.text == LEXICON_DB.get("command_admin"))
 async def process_fsm_cancel_order(
     message: Message, state: FSMContext, session: AsyncSession
 ):

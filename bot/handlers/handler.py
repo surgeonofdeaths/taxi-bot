@@ -71,6 +71,8 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         user.admin = message.from_user.id in admin_ids
         if user.admin:
             await session.commit()
+    else:
+        is_admin = user.admin
 
     await state.update_data(
         customer=customer,
@@ -86,7 +88,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     )
     await state.set_state(StartData.start)
     if not LEXICON_DB:
-        await populate_lexicon(session)
+        await populate_lexicon(session, LEXICON)
     await message.answer(
         LEXICON.get("command_start"),
         reply_markup=kb,

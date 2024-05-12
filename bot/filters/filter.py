@@ -14,16 +14,15 @@ class IsAdmin(BaseFilter):
 
     async def __call__(
         self,
-        # message: Message,
+        message: Message,
         state: FSMContext,
     ) -> bool:
         if self.is_admin:
             return self.is_admin
         state_data = await state.get_data()
         user = state_data.get("user")
+        self.is_admin = user.admin or self.is_admin
         return user.admin or self.is_admin
-        # admin_ids = settings.bot.admin_ids
-        # self.is_admin = message.from_user.id in admin_ids
 
 
 def validate_ukrainian_phone_number(phone_number: str) -> bool:
