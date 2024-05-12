@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from config.config import settings
 from db.database import sessionmaker
-from handlers import conversation, handler, order, user_misspell
+from handlers import admin, conversation, handler, order, user_misspell
 from keyboards.main_menu import set_main_menu
 from loguru import logger
 from middlewares import DbSessionMiddleware
@@ -30,6 +30,7 @@ async def main():
     dp.include_router(handler.router)
     dp.include_router(order.router)
     dp.include_router(conversation.router)
+    dp.include_router(admin.router)
     dp.include_router(user_misspell.router)
 
     logger.info("Bot started successfuly!")
