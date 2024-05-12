@@ -39,10 +39,13 @@ async def wait_for_operator(
             order.operator_id = assignee["id"]
 
             contact_btn = KeyboardButton(text=LEXICON.get("command_contact"))
-            kb = get_menu_kb([contact_btn], has_order=True)
+            state_data = await state.get_data()
+            kb = get_menu_kb(
+                [contact_btn], has_order=True, is_admin=state_data.get("is_admin")
+            )
 
-            await session.commit()
             await state.set_state(StartData.start)
+            await session.commit()
             await state.update_data(has_operator=True)
             await message.answer(text=LEXICON.get("found_operator"), reply_markup=kb)
             break

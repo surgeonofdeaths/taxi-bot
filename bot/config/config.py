@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class BotSettings(BaseSettings):
     token: str
-    admin_ids: list[str]
+    admin_ids: list[int]
     parse_mode: str
 
 
