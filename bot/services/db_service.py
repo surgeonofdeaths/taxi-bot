@@ -108,19 +108,16 @@ def get_user_filter(**kwargs) -> dict:
 async def get_or_create(session: AsyncSession, model, filter: dict):
     query = select(model).filter_by(**filter)
     instances = await session.execute(query)
-    logger.info(instances)
     try:
         instance = instances.first()[0]
     except TypeError:
         instance = None
     if instance:
-        logger.info("Instance exists")
         return instance
     else:
         instance = model(**filter)
         session.add(instance)
         await session.commit()
-        logger.info("Instance created")
         return instance
 
 
