@@ -81,6 +81,7 @@ async def process_fsm_stop_conversation(
     kb = get_menu_kb(
         has_order=state_data.get("has_order"),
         has_operator=state_data.get("has_operator"),
+        is_admin=state_data.get("is_admin"),
     )
     await message.answer(text=LEXICON["conv_stopped"], reply_markup=kb)
 

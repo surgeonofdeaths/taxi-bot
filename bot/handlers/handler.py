@@ -3,6 +3,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.utils.keyboard import KeyboardButton
+from config.config import settings
 from db.models import User
 from keyboards.keyboard import get_menu_kb
 from lexicon.lexicon import LEXICON, LEXICON_DB
@@ -31,9 +32,14 @@ router = Router()
 @router.message(StartData.start, Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     state_data = await state.get_data()
-    if not any(
-        [state_data.get("customer"), state_data.get("chat"), state_data.get("user")]
-    ):
+    customer = state_data.get("customer")
+    chat = state_data.get("chat")
+    user = state_data.get("user")
+    has_operator = state_data.get("has_operator")
+    has_order = state_data.get("has_order")
+    is_admin = state_data.get("is_admin")
+
+    if not any([customer, chat, user]):
         customer = get_customer(message.from_user.id)
         if customer and customer.get("data"):
             chat = customer["data"][0]
@@ -52,18 +58,31 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
             User,
             filter,
         )
-        await state.update_data(customer=customer, chat=chat, user=user)
+        # await state.update_data(customer=customer, chat=chat, user=user)
 
-    if not state_data.get("has_operator"):
+    if not has_operator:
         # logger.info(state_data.get("has_operator"))
-        check = check_for_operator(message.from_user.id)
-        if check:
-            # logger.info(check)
-            await state.update_data(has_operator=True)
+        has_operator = check_for_operator(message.from_user.id)
+        # if has_operator:
+        # logger.info(check)
+        # await state.update_data(has_operator=True)
+    if not user.admin:
+        admin_ids = settings.bot.admin_ids
+        user.admin = message.from_user.id in admin_ids
+        if user.admin:
+            await session.commit()
 
+    await state.update_data(
+        customer=customer,
+        chat=chat,
+        user=user,
+        has_operator=has_operator,
+        is_admin=is_admin,
+    )
     kb = get_menu_kb(
-        has_order=state_data.get("has_order"),
-        has_operator=state_data.get("has_operator"),
+        has_order=has_order,
+        has_operator=has_operator,
+        is_admin=is_admin,
     )
     await state.set_state(StartData.start)
     if not LEXICON_DB:

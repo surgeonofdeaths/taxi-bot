@@ -34,6 +34,7 @@ async def process_fsm_cancel(message: Message, state: FSMContext):
     kb = get_menu_kb(
         has_order=state_data.get("has_order"),
         has_operator=state_data.get("has_operator"),
+        is_admin=state_data.get("is_admin"),
     )
 
     await state.set_state(StartData.start)
@@ -52,6 +53,7 @@ async def process_fsm_cancel_order(
     kb = get_menu_kb(
         has_order=state_data.get("has_order"),
         has_operator=state_data.get("has_operator"),
+        is_admin=state_data.get("is_admin"),
     )
     task = state_data.get("task_wait_for_operator")
     if task:
@@ -74,7 +76,11 @@ async def process_fsm_cancel_order(
 @router.message(StateFilter(Order.cancel_or_keep), F.text == LEXICON["keep_order"])
 async def process_fsm_keep_order(message: Message, state: FSMContext):
     state_data = await state.get_data()
-    kb = get_menu_kb(has_order=True, has_operator=state_data.get("has_operator"))
+    kb = get_menu_kb(
+        has_order=True,
+        has_operator=state_data.get("has_operator"),
+        is_admin=state_data.get("is_admin"),
+    )
     await state.update_data(has_order=True)
     await state.set_state(StartData.start)
     await message.answer(text=LEXICON["order_kept"], reply_markup=kb)
@@ -108,7 +114,11 @@ async def process_fsm_confirmation(
         message_id=created_message["id"],
     )
 
-    kb = get_menu_kb(has_order=True, has_operator=state_data.get("has_operator"))
+    kb = get_menu_kb(
+        has_order=True,
+        has_operator=state_data.get("has_operator"),
+        is_admin=state_data.get("is_admin"),
+    )
 
     if not state_data.get("has_operator"):
         task = asyncio.create_task(wait_for_operator(message, state, session))
