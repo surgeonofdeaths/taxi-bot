@@ -55,7 +55,12 @@ def get_kb_markup(
     return kb_markup.as_markup(resize_keyboard=True)
 
 
-def get_menu_kb(*extra_btns, has_order: bool = False, has_operator: bool = False):
+def get_menu_kb(
+    *extra_btns,
+    has_order: bool = False,
+    has_operator: bool = False,
+    is_admin: bool = False
+):
     btns = []
     if has_order:
         order_type = "command_my_order"
@@ -66,6 +71,8 @@ def get_menu_kb(*extra_btns, has_order: bool = False, has_operator: bool = False
 
     if has_operator:
         btns.append(KeyboardButton(text=LEXICON["command_contact"]))
+    if is_admin:
+        btns.append(KeyboardButton(text=LEXICON["command_admin"]))
     if extra_btns:
         btns.extend(*extra_btns)
     btns.append(KeyboardButton(text=LEXICON.get("command_help")))
