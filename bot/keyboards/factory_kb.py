@@ -1,5 +1,5 @@
-    from aiogram.filters.callback_data import CallbackData
+from aiogram.filters.callback_data import CallbackData
 
 
-class TestCallbackFactory(CallbackData, prefix="test"):
-    name: str | None
+class LexiconCallbackFactory(CallbackData, prefix="lex"):
+    key: str | None

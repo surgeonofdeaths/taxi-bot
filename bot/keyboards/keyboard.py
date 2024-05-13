@@ -38,7 +38,7 @@ def build_inline_kb(
     kb_builder = InlineKeyboardBuilder()
     kb_builder.row(*buttons)
     kb_builder.adjust(adjust)
-    return kb_builder
+    return kb_builder.as_markup(resize_keyboard=True)
 
 
 def build_kb(*buttons: tuple[KeyboardButton], adjust: int = 2) -> KeyboardBuilder:
