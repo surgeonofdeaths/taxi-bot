@@ -151,3 +151,11 @@ async def populate_lexicon(session: AsyncSession, lexicon: dict):
             session, {"key": key, "text": value}
         )
         LEXICON_DB[key] = value
+
+
+async def update_lexicon_obj(session: AsyncSession, data: dict):
+    instance = await session.execute(
+        update(Lexicon).where(Lexicon.key == data["key"]).values(text=data["text"])
+    )
+    await session.commit()
+    return instance

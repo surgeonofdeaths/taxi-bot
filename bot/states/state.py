@@ -1,4 +1,4 @@
-from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.state import State, StatesGroup
 
 
 class StartData(StatesGroup):
@@ -16,3 +16,9 @@ class Order(StatesGroup):
 
 class Conversation(StatesGroup):
     conversation = State()
+
+
+class Lexicon(StatesGroup):
+    confirmation = State()
+    confirm = State()
+    decline = State()

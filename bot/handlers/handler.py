@@ -31,6 +31,7 @@ router = Router()
 @router.message(StateFilter(None), Command(commands=["start"]))
 @router.message(StartData.start, Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
+    logger.info("start")
     state_data = await state.get_data()
     customer = state_data.get("customer")
     chat = state_data.get("chat")

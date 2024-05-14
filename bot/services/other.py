@@ -54,4 +54,5 @@ def get_recent_messages_from_operator(recent_message_id: int, messages: dict) ->
         for i in range(diff)
         if messages[i]["from"] in roles and messages[i]["type"] == "message"
     ]
+    recent_messages.reverse()
     return recent_messages

@@ -1,44 +1,28 @@
-# from aiogram.utils.keyboard import (
-#     InlineKeyboardBuilder,
-#     InlineKeyboardButton,
-#     InlineKeyboardMarkup,
-# )
-
-# from keyboards.factory_kb import NavigationCallbackFactory
-# from lexicon.lexicon import LEXICON
-# from services import megacmd, other
-
-# from subprocess import CalledProcessError
-
-
-# def build_inline_kb(*buttons: list[str]) -> InlineKeyboardMarkup:
-
-#     kb_builder = InlineKeyboardBuilder()
-#     kb_builder.row(*buttons)
-#     kb_builder.adjust(3)
-#     return kb_builder.as_markup()
-
-# from keyboards.factory_kb import NavigationCallbackFactory
-
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
     KeyboardBuilder,
     KeyboardButton,
     ReplyKeyboardBuilder,
     ReplyKeyboardMarkup,
 )
 from lexicon.lexicon import LEXICON
+from loguru import logger
 
-# from keyboards.factory_kb import TestCallbackFactory
+from bot.keyboards.factory_kb import LexiconCallbackFactory
 
 
 def build_inline_kb(
-    *buttons: tuple[KeyboardButton], adjust: int = 2
-) -> InlineKeyboardBuilder:
-    kb_builder = InlineKeyboardBuilder()
-    kb_builder.row(*buttons)
-    kb_builder.adjust(adjust)
-    return kb_builder.as_markup(resize_keyboard=True)
+    btns: list[KeyboardButton], adjust: int | None = None
+) -> InlineKeyboardMarkup | InlineKeyboardBuilder:
+    if adjust:
+        kb_builder = InlineKeyboardBuilder()
+        kb_builder.row(*btns)
+        kb_builder.adjust(adjust)
+        return kb_builder
+    keyboard = InlineKeyboardMarkup(inline_keyboard=btns)
+    return keyboard
 
 
 def build_kb(*buttons: tuple[KeyboardButton], adjust: int = 2) -> KeyboardBuilder:
@@ -77,6 +61,40 @@ def get_menu_kb(
         btns.extend(*extra_btns)
     btns.append(KeyboardButton(text=LEXICON.get("command_help")))
     kb = get_kb_markup(*btns)
+    return kb
+
+
+def get_admin_menu_kb() -> InlineKeyboardBuilder:
+    btns = [
+        [
+            InlineKeyboardButton(
+                text=LEXICON["admin_admins"], callback_data="admin_admins"
+            ),
+            InlineKeyboardButton(
+                text=LEXICON["admin_lexicon"], callback_data="admin_lexicon"
+            ),
+        ]
+    ]
+    kb = build_inline_kb(btns)
+    return kb
+
+
+def get_lexicon_objs_kb() -> InlineKeyboardMarkup:
+    btns = [
+        InlineKeyboardButton(
+            text=key,
+            callback_data=LexiconCallbackFactory(key=key).pack(),
+        )
+        for key in LEXICON.keys()
+    ]
+    kb = build_inline_kb(btns, adjust=3)
+    kb.row(
+        InlineKeyboardButton(
+            text=LEXICON["admin_return"],
+            callback_data=LexiconCallbackFactory(action="return").pack(),
+        )
+    )
+    kb = kb.as_markup(resize_keyboard=True)
     return kb
 
 
