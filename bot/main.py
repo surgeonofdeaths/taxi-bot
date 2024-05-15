@@ -4,13 +4,19 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from config.config import settings
 from db.database import sessionmaker
-from handlers import admin, conversation, handler, order, user_misspell
 from keyboards.main_menu import set_main_menu
 from loguru import logger
 from middlewares import DbSessionMiddleware
+from services.db_service import populate_lexicon
 
 
 async def main():
+    # TODO: restructure lines below
+    async with sessionmaker() as session:
+        await populate_lexicon(session)
+
+    from handlers import admin, conversation, handler, order, user_misspell
+
     logger.add(
         sink=settings.logging.sink,
         format=settings.logging.format,
@@ -19,7 +25,6 @@ async def main():
         compression=settings.logging.compression,
         serialize=settings.logging.serialize,
     )
-
     bot: Bot = Bot(
         token=settings.bot.token,
         default=DefaultBotProperties(parse_mode=settings.bot.parse_mode),

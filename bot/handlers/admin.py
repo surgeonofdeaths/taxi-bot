@@ -10,8 +10,13 @@ from aiogram.utils.keyboard import (
     InlineKeyboardMarkup,
 )
 from filters.filter import IsAdmin
-from keyboards.factory_kb import LexiconCallbackFactory
-from keyboards.keyboard import build_inline_kb, get_admin_menu_kb, get_lexicon_objs_kb
+from keyboards.factory_kb import AdminCallbackFactory, LexiconCallbackFactory
+from keyboards.keyboard import (
+    build_inline_kb,
+    get_admin_menu_kb,
+    get_admins_kb,
+    get_lexicon_objs_kb,
+)
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
 from services.db_service import get_or_create, update_lexicon_obj
@@ -28,14 +33,7 @@ async def cmd_admin(message: Message, state: FSMContext, session: AsyncSession):
     await message.answer(text=LEXICON["command_admin"], reply_markup=kb)
 
 
-@router.callback_query(StartData.start, IsAdmin(), F.data == "admin_admins")
-async def process_admin_btn(
-    callback: CallbackQuery, state: FSMContext, session: AsyncSession
-):
-    await callback.message.answer(text="admins test")
-
-
-@router.callback_query(StartData.start, IsAdmin(), F.data == "admin_lexicon")
+@router.callback_query(StartData.start, IsAdmin(), F.data == "get_lexicon")
 async def process_lexicon_btn(
     callback: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
@@ -64,8 +62,12 @@ async def process_lexicon_obj(
     state: FSMContext,
     session: AsyncSession,
 ):
+    logger.info(callback.data)
+    logger.info(type(callback.data))
     lexicon_obj = LexiconCallbackFactory().unpack(callback.data)
-    text = lexicon_obj.key + "\n\n" + LEXICON[lexicon_obj.key]
+    logger.info(lexicon_obj)
+    text = f'<b>{lexicon_obj.key}</b>\n\n"{LEXICON[lexicon_obj.key]}"'
+
     btns = [
         [
             InlineKeyboardButton(
@@ -74,7 +76,7 @@ async def process_lexicon_obj(
             ),
             InlineKeyboardButton(
                 text=LEXICON["admin_return"],
-                callback_data="admin_lexicon",
+                callback_data="get_lexicon",
             ),
         ]
     ]
@@ -95,8 +97,10 @@ async def process_change_lexicon_obj(
     session: AsyncSession,
 ):
     logger.info("change")
+    state_data = await state.get_data()
     await state.set_state(Lexicon.confirmation)
-    await callback.message.edit_text(text="Введите новый текст объекта ✏️")
+    text = f'Введите новый текст объекта <b>"{state_data["lexicon_key"]}"</b> ✏️'
+    await callback.message.edit_text(text=text)
 
 
 @router.message(
@@ -124,7 +128,10 @@ async def process_fsm_lexicon_confirmation(
         ]
     ]
     kb = build_inline_kb(btns)
-    await message.answer(text=f"Подтвердить изменение? {message.text}", reply_markup=kb)
+    state_data = await state.get_data()
+    text = f'Подтвердить изменение объекта <b>{state_data["lexicon_key"]}</b>?\n\nСтарое значение:\n"{LEXICON[state_data["lexicon_key"]]}"\n\nНовое значение:\n"{message.text}"'
+    await state.update_data(lexicon_text=message.text)
+    await message.answer(text=text, reply_markup=kb)
 
 
 @router.callback_query(
@@ -141,18 +148,20 @@ async def process_fsm_lexicon_confirm(
     state_data = await state.get_data()
     data = {
         "key": state_data["lexicon_key"],
-        "text": LEXICON[state_data["lexicon_key"]],
+        "text": state_data["lexicon_text"],
     }
 
-    logger.info(callback.message.text)
-    logger.info(data)
-    new_lex_obj = await update_lexicon_obj(
+    await update_lexicon_obj(
         session,
         data,
     )
-    logger.info(new_lex_obj)
-    await callback.message.answer(text="confirmed")
-    # await message.answer(text="Пожалуйста, нажмите одну из кнопок!")
+
+    LEXICON[state_data["lexicon_key"]] = state_data["lexicon_text"]
+
+    kb = get_lexicon_objs_kb()
+    text = f"Значение успешно измененно!\n{LEXICON["lexicon_list"]}"
+    await state.set_state(StartData.start)
+    await callback.message.edit_text(text=text, reply_markup=kb)
 
 
 @router.callback_query(
@@ -167,5 +176,28 @@ async def process_fsm_lexicon_decline(
 ):
     kb = get_lexicon_objs_kb()
     await state.set_state(StartData.start)
-    # state_data = await state.get_data()
     await callback.message.edit_text(text=LEXICON["lexicon_list"], reply_markup=kb)
+
+
+@router.callback_query(StartData.start, IsAdmin(), F.data == "get_admins")
+async def process_admin_btn(
+    callback: CallbackQuery, state: FSMContext, session: AsyncSession
+):
+
+    kb = await get_admins_kb(session)
+    await callback.message.edit_text(text=LEXICON["admin_list"], reply_markup=kb)
+
+
+@router.callback_query(
+    StartData.start,
+    IsAdmin(),
+    F.data.startswith("admin"),
+    AdminCallbackFactory.filter(F.username),
+)
+async def process_admin_obj(
+    callback: CallbackQuery, state: FSMContext, session: AsyncSession
+):
+    logger.info(callback.data)
+    logger.info(type(callback.data))
+    admin_obj = AdminCallbackFactory().unpack(callback.data)
+    logger.info(admin_obj)

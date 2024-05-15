@@ -9,8 +9,10 @@ from aiogram.utils.keyboard import (
 )
 from lexicon.lexicon import LEXICON
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.keyboards.factory_kb import LexiconCallbackFactory
+from bot.keyboards.factory_kb import AdminCallbackFactory, LexiconCallbackFactory
+from bot.services.db_service import get_admin_users
 
 
 def build_inline_kb(
@@ -43,7 +45,7 @@ def get_menu_kb(
     *extra_btns,
     has_order: bool = False,
     has_operator: bool = False,
-    is_admin: bool = False
+    is_admin: bool = False,
 ):
     btns = []
     if has_order:
@@ -68,10 +70,10 @@ def get_admin_menu_kb() -> InlineKeyboardBuilder:
     btns = [
         [
             InlineKeyboardButton(
-                text=LEXICON["admin_admins"], callback_data="admin_admins"
+                text=LEXICON["admin_admins"], callback_data="get_admins"
             ),
             InlineKeyboardButton(
-                text=LEXICON["admin_lexicon"], callback_data="admin_lexicon"
+                text=LEXICON["admin_lexicon"], callback_data="get_lexicon"
             ),
         ]
     ]
@@ -86,6 +88,29 @@ def get_lexicon_objs_kb() -> InlineKeyboardMarkup:
             callback_data=LexiconCallbackFactory(key=key).pack(),
         )
         for key in LEXICON.keys()
+    ]
+    kb = build_inline_kb(btns, adjust=3)
+    kb.row(
+        InlineKeyboardButton(
+            text=LEXICON["admin_return"],
+            callback_data=LexiconCallbackFactory(action="return").pack(),
+        )
+    )
+    kb = kb.as_markup(resize_keyboard=True)
+    return kb
+
+
+async def get_admins_kb(session: AsyncSession) -> InlineKeyboardMarkup:
+    admins = await get_admin_users(session)
+    logger.info(admins)
+    btns = [
+        InlineKeyboardButton(
+            text=f"@{admin.username}",
+            callback_data=AdminCallbackFactory(
+                username=admin.username, id=str(admin.id)
+            ).pack(),
+        )
+        for admin in admins
     ]
     kb = build_inline_kb(btns, adjust=3)
     kb.row(

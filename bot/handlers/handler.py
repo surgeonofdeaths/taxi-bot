@@ -31,6 +31,7 @@ router = Router()
 @router.message(StateFilter(None), Command(commands=["start"]))
 @router.message(StartData.start, Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
+    # await populate_lexicon(session, LEXICON)
     logger.info("start")
     state_data = await state.get_data()
     customer = state_data.get("customer")
@@ -72,6 +73,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         user.admin = message.from_user.id in admin_ids
         if user.admin:
             await session.commit()
+            is_admin = user.admin
     else:
         is_admin = user.admin
 
@@ -88,8 +90,6 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         is_admin=is_admin,
     )
     await state.set_state(StartData.start)
-    if not LEXICON_DB:
-        await populate_lexicon(session, LEXICON)
     await message.answer(
         LEXICON.get("command_start"),
         reply_markup=kb,

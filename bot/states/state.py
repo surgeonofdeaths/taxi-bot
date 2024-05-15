@@ -20,5 +20,3 @@ class Conversation(StatesGroup):
 
 class Lexicon(StatesGroup):
     confirmation = State()
-    confirm = State()
-    decline = State()

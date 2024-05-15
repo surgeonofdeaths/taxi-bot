@@ -2,14 +2,15 @@ from typing import Optional
 
 from aiogram.types import Message
 from aiogram.types.user import User as UserType
-from db.models import Lexicon, Operator, Order
-from lexicon.lexicon import LEXICON_DB
+from db.models import Lexicon, Operator, Order, User
+from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
 from services.helpcrunch import search_customer
 from sqlalchemy import exists, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.inspection import inspect
+from sqlalchemy.orm.attributes import instance_state
 
 
 async def add_to_db(item, session: AsyncSession):
@@ -126,31 +127,33 @@ async def get_or_create_lexicon_object(session: AsyncSession, filter: dict):
     instance = await session.execute(query)
     instance = instance.scalar_one_or_none()
 
-    if instance:
-        if getattr(instance, "text", None) != filter.get("text"):
-            try:
-                await session.execute(
-                    update(Lexicon)
-                    .where(Lexicon.key == filter["key"])
-                    .values(text=filter["text"])
-                )
-                logger.info(instance)
-                await session.commit()
-            except IntegrityError:
-                logger.exception("Integrity error occurred during update")
-    else:
+    if not instance:
         instance = Lexicon(**filter)
         session.add(instance)
         await session.commit()
     return instance
 
+    # Checks if there is a change in the text field of a lexicon obj
+    # if instance:
+    #     if getattr(instance, "text", None) != filter.get("text"):
+    #         try:
+    #             await session.execute(
+    #                 update(Lexicon)
+    #                 .where(Lexicon.key == filter["key"])
+    #                 .values(text=filter["text"])
+    #             )
+    #             logger.info(instance)
+    #             await session.commit()
+    #         except IntegrityError:
+    #             logger.exception("Integrity error occurred during update")
 
-async def populate_lexicon(session: AsyncSession, lexicon: dict):
-    for key, value in lexicon.items():
+
+async def populate_lexicon(session: AsyncSession):
+    for key, text in LEXICON.items():
         lexicon_obj = await get_or_create_lexicon_object(
-            session, {"key": key, "text": value}
+            session, {"key": key, "text": text}
         )
-        LEXICON_DB[key] = value
+        LEXICON[key] = lexicon_obj.text
 
 
 async def update_lexicon_obj(session: AsyncSession, data: dict):
@@ -159,3 +162,10 @@ async def update_lexicon_obj(session: AsyncSession, data: dict):
     )
     await session.commit()
     return instance
+
+
+async def get_admin_users(session: AsyncSession):
+    query = select(User).where(User.admin == True)
+    instances = await session.execute(query)
+    admins = [admin[0] for admin in instances if admin]
+    return admins

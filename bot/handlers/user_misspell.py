@@ -1,7 +1,7 @@
-from aiogram.types import Message
 from aiogram import Router
-from loguru import logger
+from aiogram.types import Message
 from lexicon.lexicon import LEXICON
+from loguru import logger
 
 router = Router()
 
