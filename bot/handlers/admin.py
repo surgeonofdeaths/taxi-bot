@@ -1,15 +1,21 @@
 import asyncio
+from operator import call
 
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, KeyboardButton, Message
+from aiogram.types import (
+    CallbackQuery,
+    KeyboardButton,
+    Message,
+    message_auto_delete_timer_changed,
+)
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
-from filters.filter import IsAdmin
+from filters.filter import IsAdmin, get_clean_username
 from keyboards.factory_kb import AdminCallbackFactory, LexiconCallbackFactory
 from keyboards.keyboard import (
     build_inline_kb,
@@ -19,9 +25,11 @@ from keyboards.keyboard import (
 )
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
-from services.db_service import get_or_create, update_lexicon_obj
+from services.db_service import check_if_model_exists, get_or_create, update_lexicon_obj
 from sqlalchemy.ext.asyncio import AsyncSession
-from states.state import Lexicon, StartData
+from states.state import Admin, Lexicon, StartData
+
+from bot.db.models import User
 
 router = Router()
 
@@ -183,9 +191,68 @@ async def process_fsm_lexicon_decline(
 async def process_admin_btn(
     callback: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
-
     kb = await get_admins_kb(session)
     await callback.message.edit_text(text=LEXICON["admin_list"], reply_markup=kb)
+
+
+@router.callback_query(StartData.start, IsAdmin(), F.data == "admin_add")
+async def process_admin_add(
+    callback: CallbackQuery, state: FSMContext, session: AsyncSession
+):
+    btns = [
+        [
+            InlineKeyboardButton(
+                text=LEXICON["admin_cancel_adding"], callback_data="cancel_adding_user"
+            ),
+        ]
+    ]
+    kb = build_inline_kb(btns)
+    await state.set_state(Admin.confirmation)
+    await callback.message.edit_text(text=LEXICON["write_username"], reply_markup=kb)
+
+
+@router.callback_query(Admin.confirmation, IsAdmin(), F.data == "cancel_adding_user")
+@router.callback_query(StartData.start, IsAdmin(), F.data == "cancel_adding_user")
+async def process_admin_adding_cancel(
+    callback: CallbackQuery, state: FSMContext, session: AsyncSession
+):
+    kb = await get_admins_kb(session)
+    await state.set_state(StartData.start)
+    await callback.message.edit_text(text=LEXICON["admin_list"], reply_markup=kb)
+
+
+# @router.callback_query(Admin.confirmation, IsAdmin(), F.data == "admin_add_user")
+@router.message(Admin.confirmation, IsAdmin())
+async def process_admin_user(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    username = message.text
+    logger.info(username)
+    username = get_clean_username(username)
+    logger.info(username)
+    user = await check_if_model_exists(session, User, {"username": username})
+    logger.info(user)
+    if user:
+        text = f"@{username} успешно добавлен!"
+        if user.admin:
+            text = LEXICON["admin_user_exists"]
+        else:
+            user.admin = True
+            await session.commit()
+        kb = await get_admins_kb(session)
+        await state.set_state(StartData.start)
+        await message.answer(text=text, reply_markup=kb)
+    else:
+        btns = [
+            [
+                InlineKeyboardButton(
+                    text="Отменить", callback_data="cancel_adding_user"
+                ),
+            ]
+        ]
+        kb = build_inline_kb(btns)
+        await message.answer(text=LEXICON["no_username"], reply_markup=kb)
+        logger.info("User does not exist")
 
 
 @router.callback_query(
@@ -193,11 +260,57 @@ async def process_admin_btn(
     IsAdmin(),
     F.data.startswith("admin"),
     AdminCallbackFactory.filter(F.username),
+    AdminCallbackFactory.filter(~F.action),
 )
 async def process_admin_obj(
-    callback: CallbackQuery, state: FSMContext, session: AsyncSession
+    query: CallbackQuery,
+    callback_data: AdminCallbackFactory,
+    state: FSMContext,
+    session: AsyncSession,
 ):
-    logger.info(callback.data)
-    logger.info(type(callback.data))
-    admin_obj = AdminCallbackFactory().unpack(callback.data)
-    logger.info(admin_obj)
+    btns = [
+        [
+            InlineKeyboardButton(
+                text=LEXICON["admin_return"], callback_data="cancel_adding_user"
+            ),
+        ]
+    ]
+
+    if callback_data.id != str(query.from_user.id):
+        btns[0].append(
+            InlineKeyboardButton(
+                text=LEXICON["admin_remove"],
+                callback_data=AdminCallbackFactory(
+                    username=callback_data.username,
+                    id=callback_data.id,
+                    action="admin_remove",
+                ).pack(),
+            )
+        )
+    kb = build_inline_kb(btns)
+    text = f"Юзернейм пользователя: @{callback_data.username}\nID пользователя: {callback_data.id}"
+    await query.message.edit_text(text=text, reply_markup=kb)
+
+
+@router.callback_query(
+    StartData.start,
+    IsAdmin(),
+    F.data.startswith("admin"),
+    AdminCallbackFactory.filter(F.action == "admin_remove"),
+)
+async def process_admin_remove(
+    query: CallbackQuery,
+    callback_data: AdminCallbackFactory,
+    state: FSMContext,
+    session: AsyncSession,
+):
+
+    user = await get_or_create(
+        session, User, {"id": int(callback_data.id), "username": callback_data.username}
+    )
+    user.admin = False
+    await session.commit()
+    logger.info(callback_data)
+    kb = await get_admins_kb(session)
+    text = f"@{callback_data.username} успешно удален!"
+    await query.message.edit_text(text=text, reply_markup=kb)

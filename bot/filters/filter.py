@@ -30,6 +30,17 @@ def validate_ukrainian_phone_number(phone_number: str) -> bool:
     return re.match(pattern, phone_number)
 
 
+def get_clean_username(username: str) -> str:
+    if username.startswith("@"):
+        username = username.lstrip("@")
+    elif username.startswith("https://t.me/"):
+        pattern = r"\/([^\/]+)$"
+        match = re.search(pattern, username)
+        if match:
+            username = match.group(1)
+    return username
+
+
 if __name__ == "__main__":
     phone_number = "+380987654321"
     print(validate_ukrainian_phone_number(phone_number))

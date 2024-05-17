@@ -169,3 +169,13 @@ async def get_admin_users(session: AsyncSession):
     instances = await session.execute(query)
     admins = [admin[0] for admin in instances if admin]
     return admins
+
+
+async def check_if_model_exists(session, model, filter):
+    query = select(model).filter_by(**filter)
+    instances = await session.execute(query)
+    try:
+        instance = instances.first()[0]
+    except TypeError:
+        instance = None
+    return instance

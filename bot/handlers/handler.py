@@ -100,5 +100,5 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
 @router.message(StartData.start, F.text == LEXICON["command_help"])
 async def cmd_help(message: Message, state: FSMContext, session: AsyncSession):
     await message.answer(
-        text=LEXICON.get("command_help"),
+        text=LEXICON["help"],
     )

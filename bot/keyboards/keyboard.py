@@ -16,7 +16,7 @@ from bot.services.db_service import get_admin_users
 
 
 def build_inline_kb(
-    btns: list[KeyboardButton], adjust: int | None = None
+    btns: list[InlineKeyboardButton], adjust: int | None = None
 ) -> InlineKeyboardMarkup | InlineKeyboardBuilder:
     if adjust:
         kb_builder = InlineKeyboardBuilder()
@@ -117,7 +117,11 @@ async def get_admins_kb(session: AsyncSession) -> InlineKeyboardMarkup:
         InlineKeyboardButton(
             text=LEXICON["admin_return"],
             callback_data=LexiconCallbackFactory(action="return").pack(),
-        )
+        ),
+        InlineKeyboardButton(
+            text=LEXICON["admin_add"],
+            callback_data="admin_add",
+        ),
     )
     kb = kb.as_markup(resize_keyboard=True)
     return kb

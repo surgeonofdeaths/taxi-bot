@@ -9,3 +9,4 @@ class LexiconCallbackFactory(CallbackData, prefix="lex"):
 class AdminCallbackFactory(CallbackData, prefix="admin"):
     username: str
     id: str
+    action: str | None = None

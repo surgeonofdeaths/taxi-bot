@@ -20,3 +20,7 @@ class Conversation(StatesGroup):
 
 class Lexicon(StatesGroup):
     confirmation = State()
+
+
+class Admin(StatesGroup):
+    confirmation = State()
