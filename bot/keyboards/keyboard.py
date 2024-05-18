@@ -1,17 +1,13 @@
-from aiogram.utils.keyboard import (
-    InlineKeyboardBuilder,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardBuilder,
-    KeyboardButton,
-    ReplyKeyboardBuilder,
-    ReplyKeyboardMarkup,
-)
+from aiogram.utils.keyboard import (InlineKeyboardBuilder,
+                                    InlineKeyboardButton, InlineKeyboardMarkup,
+                                    KeyboardBuilder, KeyboardButton,
+                                    ReplyKeyboardBuilder, ReplyKeyboardMarkup)
 from lexicon.lexicon import LEXICON
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.keyboards.factory_kb import AdminCallbackFactory, LexiconCallbackFactory
+from bot.keyboards.factory_kb import (AdminCallbackFactory,
+                                      LexiconCallbackFactory)
 from bot.services.db_service import get_admin_users
 
 
@@ -112,7 +108,7 @@ async def get_admins_kb(session: AsyncSession) -> InlineKeyboardMarkup:
         )
         for admin in admins
     ]
-    kb = build_inline_kb(btns, adjust=3)
+    kb = build_inline_kb(btns, adjust=2)
     kb.row(
         InlineKeyboardButton(
             text=LEXICON["admin_return"],

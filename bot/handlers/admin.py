@@ -4,28 +4,19 @@ from operator import call
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    CallbackQuery,
-    KeyboardButton,
-    Message,
-    message_auto_delete_timer_changed,
-)
-from aiogram.utils.keyboard import (
-    InlineKeyboardBuilder,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
+from aiogram.types import (CallbackQuery, KeyboardButton, Message,
+                           message_auto_delete_timer_changed)
+from aiogram.utils.keyboard import (InlineKeyboardBuilder,
+                                    InlineKeyboardButton, InlineKeyboardMarkup)
+from config.config import settings
 from filters.filter import IsAdmin, get_clean_username
 from keyboards.factory_kb import AdminCallbackFactory, LexiconCallbackFactory
-from keyboards.keyboard import (
-    build_inline_kb,
-    get_admin_menu_kb,
-    get_admins_kb,
-    get_lexicon_objs_kb,
-)
+from keyboards.keyboard import (build_inline_kb, get_admin_menu_kb,
+                                get_admins_kb, get_lexicon_objs_kb)
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
-from services.db_service import check_if_model_exists, get_or_create, update_lexicon_obj
+from services.db_service import (check_if_model_exists, get_or_create,
+                                 update_lexicon_obj)
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import Admin, Lexicon, StartData
 
@@ -275,8 +266,10 @@ async def process_admin_obj(
             ),
         ]
     ]
-
-    if callback_data.id != str(query.from_user.id):
+    if (
+        callback_data.id != str(query.from_user.id)
+        and int(callback_data.id) not in settings.bot.admin_ids
+    ):
         btns[0].append(
             InlineKeyboardButton(
                 text=LEXICON["admin_remove"],
@@ -301,10 +294,8 @@ async def process_admin_obj(
 async def process_admin_remove(
     query: CallbackQuery,
     callback_data: AdminCallbackFactory,
-    state: FSMContext,
     session: AsyncSession,
 ):
-
     user = await get_or_create(
         session, User, {"id": int(callback_data.id), "username": callback_data.username}
     )

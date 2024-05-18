@@ -50,7 +50,7 @@ async def wait_for_operator(
             await message.answer(text=LEXICON.get("found_operator"), reply_markup=kb)
             break
         else:
-            await asyncio.sleep(10)
+            await asyncio.sleep(5)
 
 
 async def get_replies_from_operator(

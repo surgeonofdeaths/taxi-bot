@@ -5,7 +5,11 @@ from aiogram.filters import BaseFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from config.config import settings
+from db.database import sessionmaker
 from loguru import logger
+
+from bot.db.models import User
+from bot.services.db_service import get_or_create
 
 
 class IsAdmin(BaseFilter):
@@ -20,9 +24,14 @@ class IsAdmin(BaseFilter):
         if self.is_admin:
             return self.is_admin
         state_data = await state.get_data()
-        user = state_data.get("user")
-        self.is_admin = user.admin or self.is_admin
-        return user.admin or self.is_admin
+        user_state = state_data.get("user")
+        self.is_admin = user_state.admin or self.is_admin
+        if not self.is_admin:
+            async with sessionmaker() as session:
+                user = await get_or_create(session, User, {"id": message.from_user.id})
+                if user.admin:
+                    await state.update_data(user=user, is_admin=True)
+        return user_state.admin or self.is_admin or user.admin
 
 
 def validate_ukrainian_phone_number(phone_number: str) -> bool:
