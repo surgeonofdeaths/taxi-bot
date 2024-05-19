@@ -47,10 +47,11 @@ settings: Settings = Settings.parse_file(
     path="bot/config/config.json",
     encoding="utf-8",
 )
-url = (
-    f"postgresql+{settings.db.drivername}://"
-    f"{settings.db.user}:{settings.db.password}@"
-    f"{settings.db.host}:{settings.db.port}"
-    f"/{settings.db.database}"
-)
+# url = (
+#     f"postgresql+{settings.db.drivername}://"
+#     f"{settings.db.user}:{settings.db.password}@"
+#     f"{settings.db.host}:{settings.db.port}"
+#     f"/{settings.db.database}"
+# )
+url = "postgresql://postgres:qUvttGDyzeVrrMCblYYguFCzuAhYyvSa@monorail.proxy.rlwy.net:34507/railway"
 settings.db.url = url
