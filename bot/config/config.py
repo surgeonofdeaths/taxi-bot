@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from pydantic_settings import BaseSettings
@@ -40,6 +41,7 @@ class Settings(BaseSettings):
 
 
 print(subprocess.run(["ls", "-la", "bot/config"]))
+print(os.getcwd())
 
 settings: Settings = Settings.parse_file(
     path="bot/config/config.json",
