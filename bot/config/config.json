@@ -1,0 +1,27 @@
+{
+  "bot": {
+    "token": "6386478619:AAEUSnzgmp8ZJvQ2ZLenNI70g8sX0fRxlWE",
+    "admin_ids": [1013857410],
+    "parse_mode": "html"
+  },
+  "logging": {
+    "sink": "logs/debug.log",
+    "serialize": false,
+    "rotation": "50 MB",
+    "compression": "zip",
+    "format": "{time} {level} {message}",
+    "level": "DEBUG"
+  },
+  "db": {
+    "drivername": "asyncpg",
+    "user": "postgres",
+    "password": "root",
+    "host": "localhost",
+    "port": "5432",
+    "database": "taxibot",
+    "url": ""
+  },
+  "helpcrunch": {
+    "bearer_token": "NjNlODcyMDBiODZmODMyYWY5MTcwMWJlsnRkNjL7RB+At1NlzmSrLz1Llz584s4K6pETYbdDPOrcVcVCb0blKttHI4FdHeG0fN3N8sn0AGkynHLSu0irTGv6tsMPtAz3BxTwNjQlSrjzksqKOk0kU9HxNHt5EvfQJP5cwfMeNCVcxga2IMRgQ/Gplt6covLGGG//0t9ePXJ4T2sczHMp/XVoJcuZi2gATk9RRf3APuKDsnh2TFFbi0ML3lQtCCSwUZu8iys6CzcUnBJFTAjSRXMEcxDWgaaODZ2vOEEZ+a3MYDAvtbvUslebywpfeg=="
+  }
+}
