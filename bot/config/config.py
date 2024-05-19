@@ -1,3 +1,5 @@
+import subprocess
+
 from pydantic_settings import BaseSettings
 
 
@@ -36,6 +38,8 @@ class Settings(BaseSettings):
     db: DatabaseSettings
     helpcrunch: HelpcrunchSettings
 
+
+print(subprocess.run(["ls", "-la"]))
 
 settings: Settings = Settings.parse_file(
     path="bot/config/config.json",
