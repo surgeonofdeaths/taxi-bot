@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     helpcrunch: HelpcrunchSettings
 
 
-print(subprocess.run(["ls", "-la"]))
+print(subprocess.run(["ls", "-la", "bot/config"]))
 
 settings: Settings = Settings.parse_file(
     path="bot/config/config.json",
