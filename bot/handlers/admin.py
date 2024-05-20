@@ -158,6 +158,7 @@ async def process_fsm_lexicon_confirm(
     LEXICON[state_data["lexicon_key"]] = state_data["lexicon_text"]
 
     kb = get_lexicon_objs_kb()
+    logger.info(LEXICON)
     text = f"Значение успешно измененно!\n{LEXICON["lexicon_list"]}"
     await state.set_state(StartData.start)
     await callback.message.edit_text(text=text, reply_markup=kb)
