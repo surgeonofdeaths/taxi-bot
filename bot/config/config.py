@@ -50,5 +50,5 @@ settings: Settings = Settings.parse_file(
 #     f"{settings.db.host}:{settings.db.port}"
 #     f"/{settings.db.database}"
 # )
-url = "postgresql+asyncpg://postgres:cOfkbZzWGzTMiVpziAbbkFnCpzXtVZAf@monorail.proxy.rlwy.net:24727/railway"
+url = "postgresql+asyncpg://postgres:JkRcVwQGYWhyJWmsuWjTQfknRgXwEkKI@roundhouse.proxy.rlwy.net:14075/railway"
 settings.db.url = url
