@@ -4,19 +4,29 @@ from operator import call
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (CallbackQuery, KeyboardButton, Message,
-                           message_auto_delete_timer_changed)
-from aiogram.utils.keyboard import (InlineKeyboardBuilder,
-                                    InlineKeyboardButton, InlineKeyboardMarkup)
+from aiogram.types import (
+    CallbackQuery,
+    KeyboardButton,
+    Message,
+    message_auto_delete_timer_changed,
+)
+from aiogram.utils.keyboard import (
+    InlineKeyboardBuilder,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
 from config.config import settings
 from filters.filter import IsAdmin, get_clean_username
 from keyboards.factory_kb import AdminCallbackFactory, LexiconCallbackFactory
-from keyboards.keyboard import (build_inline_kb, get_admin_menu_kb,
-                                get_admins_kb, get_lexicon_objs_kb)
+from keyboards.keyboard import (
+    build_inline_kb,
+    get_admin_menu_kb,
+    get_admins_kb,
+    get_lexicon_objs_kb,
+)
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
-from services.db_service import (check_if_model_exists, get_or_create,
-                                 update_lexicon_obj)
+from services.db_service import check_if_model_exists, get_or_create, update_lexicon_obj
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import Admin, Lexicon, StartData
 
@@ -159,7 +169,7 @@ async def process_fsm_lexicon_confirm(
 
     kb = get_lexicon_objs_kb()
     logger.info(LEXICON)
-    text = f"Значение успешно измененно!\n{LEXICON["lexicon_list"]}"
+    text = f"Значение успешно измененно!\n{LEXICON['lexicon_list']}"
     await state.set_state(StartData.start)
     await callback.message.edit_text(text=text, reply_markup=kb)
 
