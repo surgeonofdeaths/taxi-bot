@@ -1,5 +1,9 @@
 from config.config import settings
-from loguru import logger
+from loguru import Message, logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from bot.db.models import User
+from bot.services.db_service import get_or_create, get_user_filter
 
 from .request import build_url, request_url
 
@@ -97,6 +101,31 @@ def get_assignee(chat: dict):
         return assignee
     except KeyError as e:
         return e
+
+
+async def get_or_create_customer(
+    message: Message, session: AsyncSession, customer, user
+):
+    if not any([customer, user]):
+        customer = get_customer(message.from_user.id)
+        if customer and customer.get("data"):
+            chat = customer["data"][0]
+        else:
+            customer = create_customer(
+                message.from_user.id, message.from_user.full_name
+            )
+            create_chat(customer["id"])
+
+        filter = get_user_filter(
+            user=message.from_user,
+            chat_id=chat["id"],
+        )
+        user = await get_or_create(
+            session,
+            User,
+            filter,
+        )
+    return customer
 
 
 if __name__ == "__main__":

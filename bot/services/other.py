@@ -2,7 +2,7 @@ import asyncio
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
-from db.models import Order
+from db.models import Order, User
 from keyboards.keyboard import get_menu_kb
 from lexicon.lexicon import LEXICON
 from loguru import logger
@@ -56,3 +56,14 @@ def get_recent_messages_from_operator(recent_message_id: int, messages: dict) ->
     ]
     recent_messages.reverse()
     return recent_messages
+
+
+def check_admin(user: User):
+    if not user.admin:
+        admin_ids = settings.bot.admin_ids
+        user.admin = message.from_user.id in admin_ids
+        if user.admin:
+            await session.commit()
+            is_admin = user.admin
+    else:
+        is_admin = user.admin

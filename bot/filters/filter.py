@@ -7,6 +7,7 @@ from aiogram.types import Message
 from config.config import settings
 from db.database import sessionmaker
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.db.models import User
 from bot.services.db_service import get_or_create
@@ -49,6 +50,16 @@ def get_clean_username(username: str) -> str:
             username = match.group(1)
     return username
 
+
+async def check_admin(session: AsyncSession, message: Message, user: User) -> bool:
+    if not user.admin:
+        admin_ids = settings.bot.admin_ids
+        user.admin = message.from_user.id in admin_ids
+        if user.admin:
+            await session.commit()
+            return user.admin
+    else:
+        return user.admin
 
 if __name__ == "__main__":
     phone_number = "+380987654321"
