@@ -5,7 +5,6 @@ from aiogram.types.user import User as UserType
 from db.models import Lexicon, Operator, Order, User
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
-from services.helpcrunch import search_customer
 from sqlalchemy import exists, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -89,21 +88,6 @@ async def get_unprocessed_order(telegram_id: str, session) -> None | Order:
     any_unprocessed_order = any_unprocessed_orders.first()
     if any_unprocessed_order:
         return any_unprocessed_order[0]
-
-
-def get_user_filter(**kwargs) -> dict:
-    user = kwargs["user"]
-    chat = search_customer(user.id)
-    customer_id = chat["data"][0]["id"]
-    username = user.username if user.username else "no_username"
-    filter = {}
-    filter["id"] = user.id
-    filter["username"] = username
-    filter["first_name"] = user.first_name
-    filter["last_name"] = user.last_name
-    filter["customer_id"] = str(customer_id)
-    filter["chat_id"] = str(kwargs["chat_id"])
-    return filter
 
 
 async def get_or_create(session: AsyncSession, model, filter: dict):

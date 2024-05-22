@@ -8,22 +8,16 @@ from db.models import User
 from keyboards.keyboard import get_menu_kb
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
-from services.db_service import (
-    create_operator,
-    get_or_create,
-    get_user_filter,
-    populate_lexicon,
-)
-from services.helpcrunch import (
-    create_chat,
-    create_customer,
-    get_assignee,
-    get_customer,
-    search_chat,
-)
-from services.other import check_for_operator
+from services.db_service import (create_operator, get_or_create,
+                                 populate_lexicon)
+from services.helpcrunch import (create_chat, create_customer, get_assignee,
+                                 get_customer, get_or_create_customer_user,
+                                 search_chat)
+from services.other import check_for_operator, get_user_filter
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import StartData
+
+from bot.filters.filter import check_admin
 
 router = Router()
 
@@ -31,55 +25,21 @@ router = Router()
 @router.message(StateFilter(None), Command(commands=["start"]))
 @router.message(StartData.start, Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
-    # await populate_lexicon(session, LEXICON)
-    logger.info("start")
     state_data = await state.get_data()
     customer = state_data.get("customer")
-    chat = state_data.get("chat")
     user = state_data.get("user")
     has_operator = state_data.get("has_operator")
     has_order = state_data.get("has_order")
     is_admin = state_data.get("is_admin")
 
-    if not any([customer, chat, user]):
-        customer = get_customer(message.from_user.id)
-        if customer and customer.get("data"):
-            chat = customer["data"][0]
-        else:
-            customer = create_customer(
-                message.from_user.id, message.from_user.full_name
-            )
-            chat = create_chat(customer["id"])
-
-        filter = get_user_filter(
-            user=message.from_user,
-            chat_id=chat["id"],
-        )
-        user = await get_or_create(
-            session,
-            User,
-            filter,
-        )
-        # await state.update_data(customer=customer, chat=chat, user=user)
+    customer, user = await get_or_create_customer_user(message, session, customer, user)
 
     if not has_operator:
-        # logger.info(state_data.get("has_operator"))
         has_operator = check_for_operator(message.from_user.id)
-        # if has_operator:
-        # logger.info(check)
-        # await state.update_data(has_operator=True)
-    if not user.admin:
-        admin_ids = settings.bot.admin_ids
-        user.admin = message.from_user.id in admin_ids
-        if user.admin:
-            await session.commit()
-            is_admin = user.admin
-    else:
-        is_admin = user.admin
+    is_admin = await check_admin(session, message, user)
 
     await state.update_data(
         customer=customer,
-        chat=chat,
         user=user,
         has_operator=has_operator,
         is_admin=is_admin,

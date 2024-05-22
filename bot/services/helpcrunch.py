@@ -1,5 +1,10 @@
+from aiogram.types import Message
 from config.config import settings
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from bot.db.models import User
+from bot.services.db_service import get_or_create
 
 from .request import build_url, request_url
 
@@ -97,6 +102,46 @@ def get_assignee(chat: dict):
         return assignee
     except KeyError as e:
         return e
+
+
+async def get_or_create_customer_user(
+    message: Message, session: AsyncSession, customer, user
+):
+    if not any([customer, user]):
+        customer = get_customer(message.from_user.id)
+        if customer and customer.get("data"):
+            chat = customer["data"][0]
+        else:
+            customer = create_customer(
+                message.from_user.id, message.from_user.full_name
+            )
+            create_chat(customer["id"])
+
+        filter = get_user_filter(
+            user=message.from_user,
+            chat_id=chat["id"],
+        )
+        user = await get_or_create(
+            session,
+            User,
+            filter,
+        )
+    return customer, user
+
+
+def get_user_filter(**kwargs) -> dict:
+    user = kwargs["user"]
+    chat = search_customer(user.id)
+    customer_id = chat["data"][0]["id"]
+    username = user.username if user.username else "no_username"
+    filter = {}
+    filter["id"] = user.id
+    filter["username"] = username
+    filter["first_name"] = user.first_name
+    filter["last_name"] = user.last_name
+    filter["customer_id"] = str(customer_id)
+    filter["chat_id"] = str(kwargs["chat_id"])
+    return filter
 
 
 if __name__ == "__main__":
