@@ -115,7 +115,7 @@ async def get_or_create_customer_user(
             customer = create_customer(
                 message.from_user.id, message.from_user.full_name
             )
-            create_chat(customer["id"])
+            chat = create_chat(customer["id"])
 
         filter = get_user_filter(
             user=message.from_user,
