@@ -3,6 +3,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.utils.keyboard import KeyboardButton
+from bot.states.check_state import check_states
 from config.config import settings
 from db.models import User
 from keyboards.keyboard import get_menu_kb
@@ -14,6 +15,7 @@ from services.helpcrunch import (create_chat, create_customer, get_assignee,
                                  get_customer, get_or_create_customer_user,
                                  search_chat)
 from services.other import check_for_operator, get_user_filter
+from services.state import get_main_state
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import StartData
 
@@ -25,25 +27,33 @@ router = Router()
 @router.message(StateFilter(None), Command(commands=["start"]))
 @router.message(StartData.start, Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
-    state_data = await state.get_data()
-    customer = state_data.get("customer")
-    user = state_data.get("user")
+    # state_data = await state.get_data()
+    # customer = state_data.get("customer")
+    # user = state_data.get("user")
+    # has_operator = state_data.get("has_operator")
+    # has_order = state_data.get("has_order")
+    # is_admin = state_data.get("is_admin")
+    #
+    # customer, user = await get_or_create_customer_user(message, session, customer, user)
+    #
+    # if not has_operator:
+    #     has_operator = check_for_operator(message.from_user.id)
+    # is_admin = await check_admin(session, message, user)
+    #
+    state_data = await get_main_state(message, state, session)
+
+    # customer = state_data.get("customer")
+    # user = state_data.get("user")
     has_operator = state_data.get("has_operator")
-    has_order = state_data.get("has_order")
     is_admin = state_data.get("is_admin")
+    has_order = state_data.get("has_order")
 
-    customer, user = await get_or_create_customer_user(message, session, customer, user)
-
-    if not has_operator:
-        has_operator = check_for_operator(message.from_user.id)
-    is_admin = await check_admin(session, message, user)
-
-    await state.update_data(
-        customer=customer,
-        user=user,
-        has_operator=has_operator,
-        is_admin=is_admin,
-    )
+    # await state.update_data(
+    #     customer=customer,
+    #     user=user,
+    #     has_operator=has_operator,
+    #     is_admin=is_admin,
+    # )
     kb = get_menu_kb(
         has_order=has_order,
         has_operator=has_operator,

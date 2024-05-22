@@ -71,3 +71,4 @@ def get_user_filter(**kwargs) -> dict:
     filter["customer_id"] = str(customer_id)
     filter["chat_id"] = str(kwargs["chat_id"])
     return filter
+
