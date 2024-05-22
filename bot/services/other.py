@@ -7,7 +7,7 @@ from keyboards.keyboard import get_menu_kb
 from lexicon.lexicon import LEXICON
 from loguru import logger
 from services.db_service import create_operator
-from services.helpcrunch import get_assignee, get_messages, search_chat
+from services.helpcrunch import get_assignee, get_messages, search_chat, search_customer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import Conversation, StartData
@@ -58,12 +58,16 @@ def get_recent_messages_from_operator(recent_message_id: int, messages: dict) ->
     return recent_messages
 
 
-def check_admin(user: User):
-    if not user.admin:
-        admin_ids = settings.bot.admin_ids
-        user.admin = message.from_user.id in admin_ids
-        if user.admin:
-            await session.commit()
-            is_admin = user.admin
-    else:
-        is_admin = user.admin
+def get_user_filter(**kwargs) -> dict:
+    user = kwargs["user"]
+    chat = search_customer(user.id)
+    customer_id = chat["data"][0]["id"]
+    username = user.username if user.username else "no_username"
+    filter = {}
+    filter["id"] = user.id
+    filter["username"] = username
+    filter["first_name"] = user.first_name
+    filter["last_name"] = user.last_name
+    filter["customer_id"] = str(customer_id)
+    filter["chat_id"] = str(kwargs["chat_id"])
+    return filter

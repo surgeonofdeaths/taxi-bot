@@ -61,6 +61,7 @@ async def check_admin(session: AsyncSession, message: Message, user: User) -> bo
     else:
         return user.admin
 
+
 if __name__ == "__main__":
     phone_number = "+380987654321"
     print(validate_ukrainian_phone_number(phone_number))

@@ -8,21 +8,12 @@ from db.models import User
 from keyboards.keyboard import get_menu_kb
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
-from services.db_service import (
-    create_operator,
-    get_or_create,
-    get_user_filter,
-    populate_lexicon,
-)
-from services.helpcrunch import (
-    create_chat,
-    create_customer,
-    get_assignee,
-    get_customer,
-    get_or_create_customer,
-    search_chat,
-)
-from services.other import check_for_operator
+from services.db_service import (create_operator, get_or_create,
+                                 populate_lexicon)
+from services.helpcrunch import (create_chat, create_customer, get_assignee,
+                                 get_customer, get_or_create_customer_user,
+                                 search_chat)
+from services.other import check_for_operator, get_user_filter
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import StartData
 
@@ -41,11 +32,11 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     has_order = state_data.get("has_order")
     is_admin = state_data.get("is_admin")
 
-    customer = get_or_create_customer(message, session, customer, user)
+    customer, user = await get_or_create_customer_user(message, session, customer, user)
 
     if not has_operator:
         has_operator = check_for_operator(message.from_user.id)
-    is_admin = await check_admin(user)
+    is_admin = await check_admin(session, message, user)
 
     await state.update_data(
         customer=customer,
