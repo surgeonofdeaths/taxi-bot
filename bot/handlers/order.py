@@ -4,16 +4,16 @@ from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
-from db.models import User
+from db.models import User, Order as OrderModel
 from filters.filter import validate_ukrainian_phone_number
 from keyboards.keyboard import get_kb_markup, get_menu_kb
 from lexicon.lexicon import LEXICON
 from loguru import logger
-from services.db_service import create_order, get_unprocessed_order
+from services.db_service import create_order, get_or_create, get_unprocessed_order
 from services.helpcrunch import send_message
 from services.other import get_order_info
 from services.tasks import wait_for_operator
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_session
 from states.state import Order, StartData
 
 router = Router()
@@ -47,9 +47,12 @@ async def process_fsm_cancel_order(
 ):
     await state.update_data(has_order=False)
     state_data = await state.get_data()
-    order = state_data["unprocessed_order"]
-    await session.delete(order)
-    await session.commit()
+    if state_data["unprocessed_order"]:
+        order = await get_or_create(
+            session, OrderModel, {"user_id": message.from_user.id}
+        )
+        await session.delete(order)
+        await session.commit()
     kb = get_menu_kb(
         has_order=state_data.get("has_order"),
         has_operator=state_data.get("has_operator"),
@@ -59,7 +62,7 @@ async def process_fsm_cancel_order(
     if task:
         task.cancel()
 
-    chat_id = state_data["user"].chat_id
+    chat_id = state_data["user"]["chat_id"]
     json = {
         "chat": chat_id,
         "text": LEXICON["send_operator_cancel_order"],
@@ -84,6 +87,29 @@ async def process_fsm_keep_order(message: Message, state: FSMContext):
     await state.update_data(has_order=True)
     await state.set_state(StartData.start)
     await message.answer(text=LEXICON["order_kept"], reply_markup=kb)
+
+
+@router.message(StateFilter(Order.cancel_or_keep))
+async def process_fsm_keep_order(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    state_data = await state.get_data()
+    buttons = [
+        KeyboardButton(text=LEXICON["cancel_order"]),
+        KeyboardButton(text=LEXICON["keep_order"]),
+    ]
+    kb = get_kb_markup(*buttons)
+    order_obj = await get_or_create(
+        session, OrderModel, {"user_id": message.from_user.id}
+    )
+    text = (
+        LEXICON["has_order"] + "\n\n" + get_order_info(state_data, order_obj=order_obj)
+    )
+
+    await message.answer(
+        text=text,
+        reply_markup=kb,
+    )
 
 
 @router.message(Order.confirmation, Command(commands=["confirm"]))
@@ -122,6 +148,7 @@ async def process_fsm_confirmation(
 
     if not state_data.get("has_operator"):
         task = asyncio.create_task(wait_for_operator(message, state, session))
+        logger.info(task)
         await state.update_data(task_wait_for_operator=task)
     await state.set_state(StartData.start)
     await state.update_data(has_order=True)
@@ -151,6 +178,8 @@ async def process_fsm_fail_confirmation(
 async def process_order_command(
     message: Message, state: FSMContext, session: AsyncSession
 ):
+    state_data = await state.get_data()
+    logger.info(state_data)
     any_unprocessed_order = await get_unprocessed_order(message.from_user.id, session)
     user = await session.get(User, message.from_user.id)
     if any_unprocessed_order:
@@ -166,7 +195,7 @@ async def process_order_command(
             + get_order_info(order_obj=any_unprocessed_order)
         )
         await state.set_state(Order.cancel_or_keep)
-        await state.update_data(unprocessed_order=any_unprocessed_order)
+        await state.update_data(unprocessed_order=True)
         await message.answer(
             text=text,
             reply_markup=kb,

@@ -41,7 +41,9 @@ async def wait_for_operator(
             contact_btn = KeyboardButton(text=LEXICON.get("command_contact"))
             state_data = await state.get_data()
             kb = get_menu_kb(
-                [contact_btn], has_order=True, is_admin=state_data.get("is_admin")
+                [contact_btn],
+                has_order=True,
+                is_admin=state_data.get("user").get("is_admin"),
             )
 
             await state.set_state(StartData.start)

@@ -24,6 +24,8 @@ def check_for_operator(telegram_id: int) -> None | dict:
 def get_order_info(
     user_data: dict[str, any] | None = None, order_obj: Order | None = None
 ) -> str:
+    logger.info(user_data)
+    logger.info(order_obj)
     if user_data:
         phone_number = user_data["phone_number"]
         start_address = user_data["start_address"]
@@ -71,4 +73,3 @@ def get_user_filter(**kwargs) -> dict:
     filter["customer_id"] = str(customer_id)
     filter["chat_id"] = str(kwargs["chat_id"])
     return filter
-

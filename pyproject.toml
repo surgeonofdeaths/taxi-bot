@@ -16,6 +16,7 @@ alembic = "^1.13.1"
 requests = "^2.31.0"
 sqlalchemy-utils = "^0.41.2"
 psycopg2 = "^2.9.9"
+redis = "^5.0.4"
 
 
 [build-system]

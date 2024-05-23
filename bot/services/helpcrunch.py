@@ -105,9 +105,11 @@ def get_assignee(chat: dict):
 
 
 async def get_or_create_customer_user(
-    message: Message, session: AsyncSession, customer, user
+    message: Message,
+    session: AsyncSession,
+    user_dict: dict | None = None,
 ):
-    if not any([customer, user]):
+    if not any([user_dict, user_dict.get("customer_id")]):
         customer = get_customer(message.from_user.id)
         if customer and customer.get("data"):
             chat = customer["data"][0]
@@ -121,12 +123,15 @@ async def get_or_create_customer_user(
             user=message.from_user,
             chat_id=chat["id"],
         )
+        logger.info(filter)
         user = await get_or_create(
             session,
             User,
             filter,
         )
-    return customer, user
+        user_dict["chat_id"] = user.chat_id
+        user_dict["customer_id"] = user.customer_id
+    return user_dict
 
 
 def get_user_filter(**kwargs) -> dict:

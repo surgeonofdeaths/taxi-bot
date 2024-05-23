@@ -26,13 +26,20 @@ class IsAdmin(BaseFilter):
             return self.is_admin
         state_data = await state.get_data()
         user_state = state_data.get("user")
-        self.is_admin = user_state.admin or self.is_admin
+        self.is_admin = (
+            user_state and user_state.get("is_admin") or user_state and self.is_admin
+        )
         if not self.is_admin:
             async with sessionmaker() as session:
                 user = await get_or_create(session, User, {"id": message.from_user.id})
                 if user.admin:
-                    await state.update_data(user=user, is_admin=True)
-        return user_state.admin or self.is_admin or user.admin
+                    user_data = {
+                        "is_admin": user.admin,
+                        "chat_id": user.chat_id,
+                        "customer_id": user.customer_id,
+                    }
+                    await state.update_data(user=user_data)
+        return user_state.get("is_admin") or self.is_admin or user.admin
 
 
 def validate_ukrainian_phone_number(phone_number: str) -> bool:
@@ -51,15 +58,17 @@ def get_clean_username(username: str) -> str:
     return username
 
 
-async def check_admin(session: AsyncSession, message: Message, user: User) -> bool:
-    if not user.admin:
+async def check_admin(session: AsyncSession, message: Message, user_data: User) -> bool:
+    logger.info(user_data)
+    if not user_data.get("is_admin"):
         admin_ids = settings.bot.admin_ids
+        user = await get_or_create(session, User, {"id": message.from_user.id})
         user.admin = message.from_user.id in admin_ids
         if user.admin:
             await session.commit()
-            return user.admin
+            return user_data.admin
     else:
-        return user.admin
+        return user_data.get("is_admin")
 
 
 if __name__ == "__main__":

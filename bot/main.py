@@ -1,5 +1,6 @@
 import asyncio
 
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from config.config import settings
@@ -8,6 +9,7 @@ from keyboards.main_menu import set_main_menu
 from loguru import logger
 from middlewares import DbSessionMiddleware
 from services.db_service import populate_lexicon
+from misc import redis
 
 
 async def main():
@@ -25,11 +27,12 @@ async def main():
         compression=settings.logging.compression,
         serialize=settings.logging.serialize,
     )
+
     bot: Bot = Bot(
         token=settings.bot.token,
         default=DefaultBotProperties(parse_mode=settings.bot.parse_mode),
     )
-    dp: Dispatcher = Dispatcher()
+    dp: Dispatcher = Dispatcher(storage=RedisStorage(redis))
     dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))
 
     dp.include_router(handler.router)
