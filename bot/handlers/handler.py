@@ -14,7 +14,7 @@ from services.helpcrunch import (
     create_customer,
     get_assignee,
     get_customer,
-    get_or_create_customer_user,
+    get_user_state,
     search_chat,
 )
 from services.other import check_for_operator, get_user_filter

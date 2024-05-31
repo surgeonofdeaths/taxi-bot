@@ -46,7 +46,7 @@ def get_order_info(
     return text
 
 
-def get_recent_messages_from_operator(recent_message_id: int, messages: dict) -> dict:
+def get_recent_messages_from_operator(recent_message_id: int, messages: dict) -> list:
     roles = ("admin", "operator", "agent")
     recent_messages = []
 

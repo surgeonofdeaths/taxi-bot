@@ -3,6 +3,7 @@ from config.config import settings
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from pprint import pprint
 from bot.db.models import User
 from bot.services.db_service import get_or_create
 
@@ -104,12 +105,14 @@ def get_assignee(chat: dict):
         return e
 
 
-async def get_or_create_customer_user(
+async def get_user_state(
     message: Message,
     session: AsyncSession,
     user_dict: dict | None = None,
 ):
-    if not any([user_dict, user_dict.get("customer_id")]):
+    if user_dict is None:
+        user_dict = {}
+    if not user_dict or user_dict.get("customer_id"):
         customer = get_customer(message.from_user.id)
         if customer and customer.get("data"):
             chat = customer["data"][0]

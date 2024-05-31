@@ -63,15 +63,14 @@ async def get_replies_from_operator(
     while True:
         state_data = await state.get_data()
         # logger.info(state_data["recent_message_id"])
-        messages = get_messages(state_data["user"].chat_id)
+        messages = get_messages(state_data["user"]["chat_id"])
         recent_messages = get_recent_messages_from_operator(
             state_data["recent_message_id"], messages
         )
         logger.info(recent_messages)
-
         [
             await message.answer(text=recent_message.get("text"))
             for recent_message in recent_messages
         ]
         await state.update_data(recent_message_id=messages[0]["id"])
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)

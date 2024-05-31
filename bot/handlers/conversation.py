@@ -31,22 +31,22 @@ async def process_fsm_conversation_start(
             KeyboardButton(text=LEXICON["stop_conv"]),
         ]
         kb = get_kb_markup(*buttons)
-        # logger.info(kb)
 
-        chat_id = state_data["user"].chat_id
+        logger.info(state_data)
+        chat_id = state_data["user"]["chat_id"]
         json = {
             "chat": chat_id,
             "text": LEXICON["user_started_conv_with_operator"],
             "type": "message",
         }
-        # logger.info(json)
 
         created_message = send_message(json)
 
-        task = asyncio.create_task(get_replies_from_operator(message, state, session))
-        await state.update_data(
-            task_replies_from_operator=task, recent_message_id=created_message["id"]
+        task = asyncio.create_task(
+            get_replies_from_operator(message, state, session),
+            name="replies_from_operator",
         )
+        await state.update_data(recent_message_id=created_message["id"])
 
         await message.answer(text=LEXICON["operator_conv"], reply_markup=kb)
         await state.set_state(Conversation.conversation)
@@ -66,11 +66,16 @@ async def process_fsm_stop_conversation(
     await state.set_state(StartData.start)
     state_data = await state.get_data()
 
-    task = state_data["task_replies_from_operator"]
-    if task:
-        task.cancel()
+    task = [
+        task
+        for task in asyncio.all_tasks()
+        if task.get_name() == "replies_from_operator"
+    ]
+    logger.info(task)
+    if task and task[0]:
+        task[0].cancel()
 
-    chat_id = state_data["user"].chat_id
+    chat_id = state_data["user"]["chat_id"]
     json = {
         "chat": chat_id,
         "text": LEXICON["user_stopped_conv_with_operator"],
@@ -81,7 +86,7 @@ async def process_fsm_stop_conversation(
     kb = get_menu_kb(
         has_order=state_data.get("has_order"),
         has_operator=state_data.get("has_operator"),
-        is_admin=state_data.get("is_admin"),
+        is_admin=state_data["user"]["is_admin"],
     )
     await message.answer(text=LEXICON["conv_stopped"], reply_markup=kb)
 
@@ -93,12 +98,11 @@ async def process_fsm_conversation(
     session: AsyncSession,
 ):
     state_data = await state.get_data()
-    chat_id = state_data["user"].chat_id
+    chat_id = state_data["user"]["chat_id"]
     text = message.text
     if text:
         user_json = {"chat": chat_id, "text": text, "type": "message"}
         created_message = send_message(user_json)
-        await state.update_data(most_recent_message_id_from_user=created_message["id"])
         logger.info(created_message)
     else:
         await message.answer(text=LEXICON_DB["only_text"])

@@ -1,15 +1,15 @@
 import asyncio
 
-from aiogram.fsm.storage.redis import RedisStorage
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.fsm.storage.redis import RedisStorage
 from config.config import settings
 from db.database import sessionmaker
 from keyboards.main_menu import set_main_menu
 from loguru import logger
 from middlewares import DbSessionMiddleware
-from services.db_service import populate_lexicon
 from misc import redis
+from services.db_service import populate_lexicon
 
 
 async def main():

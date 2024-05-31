@@ -1,6 +1,6 @@
 {
   "bot": {
-    "token": "6245898406:AAGK8wcciOd7VeYxNl8YTj52GhgAe9Grrt8",
+    "token": "6386478619:AAEUSnzgmp8ZJvQ2ZLenNI70g8sX0fRxlWE",
     "admin_ids": [1013857410],
     "parse_mode": "html"
   },
@@ -22,6 +22,7 @@
     "url": ""
   },
   "helpcrunch": {
-    "bearer_token": "NjNlODcyMDBiODZmODMyYWY5MTcwMWJlsnRkNjL7RB+At1NlzmSrLz1Llz584s4K6pETYbdDPOrcVcVCb0blKttHI4FdHeG0fN3N8sn0AGkynHLSu0irTGv6tsMPtAz3BxTwNjQlSrjzksqKOk0kU9HxNHt5EvfQJP5cwfMeNCVcxga2IMRgQ/Gplt6covLGGG//0t9ePXJ4T2sczHMp/XVoJcuZi2gATk9RRf3APuKDsnh2TFFbi0ML3lQtCCSwUZu8iys6CzcUnBJFTAjSRXMEcxDWgaaODZ2vOEEZ+a3MYDAvtbvUslebywpfeg=="
+    "bearer_token": "NjRiMmM5YjEyODU0NmQzMDUxMjAzYzQw9z4Rtc3MVILTrkXaU4BiGiRyyNgHp/5o+GWOnous2ddz7VRYTQ8cPfhniv0Pse62jimexsoeH+2oxMsQln1RdhMr8aKvlV507+Ljs7tYxQk7Rc8TE2398DY0qRnmnqnrYbEYKPhgiCpHBzOfOGTKLWpWHufPxoGwhNnqy0B6VnSif5c4FzTOWtpNMMAMkFQOpsu2bggSlCiehPRH9RLrAOhYqM/sojv6S40Nd9jCgnW/u3y7vm1GxbR9AjakBVfM+hPXKuyZH6kgS1vx5zpLmPXWlw==",
+    "request_api_wait": 5
   }
 }

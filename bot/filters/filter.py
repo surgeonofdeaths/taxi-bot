@@ -10,7 +10,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.db.models import User
-from bot.services.db_service import get_or_create
+from bot.services.db_service import check_if_model_exists, get_or_create
 
 
 class IsAdmin(BaseFilter):
@@ -42,6 +42,20 @@ class IsAdmin(BaseFilter):
         return user_state.get("is_admin") or self.is_admin or user.admin
 
 
+class HasUser(BaseFilter):
+    def __init__(self, has_user: bool | None = False):
+        self.has_user = has_user
+
+    async def __call__(
+        self,
+        message: Message,
+        session: AsyncSession,
+    ) -> bool:
+        exists = check_if_model_exists(session, User, {"id": message.from_user.id})
+        self.has_user = exists
+        return exists
+
+
 def validate_ukrainian_phone_number(phone_number: str) -> bool:
     pattern = r"^\+380\d{9}$"
     return re.match(pattern, phone_number)
@@ -58,7 +72,7 @@ def get_clean_username(username: str) -> str:
     return username
 
 
-async def check_admin(session: AsyncSession, message: Message, user_data: User) -> bool:
+async def check_admin(session: AsyncSession, message: Message, user_data: dict) -> bool:
     logger.info(user_data)
     if not user_data.get("is_admin"):
         admin_ids = settings.bot.admin_ids
@@ -66,7 +80,7 @@ async def check_admin(session: AsyncSession, message: Message, user_data: User) 
         user.admin = message.from_user.id in admin_ids
         if user.admin:
             await session.commit()
-            return user_data.admin
+            return user.admin
     else:
         return user_data.get("is_admin")
 

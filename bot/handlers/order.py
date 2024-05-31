@@ -4,8 +4,9 @@ from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
-from db.models import User, Order as OrderModel
-from filters.filter import validate_ukrainian_phone_number
+from db.models import Order as OrderModel
+from db.models import User
+from filters.filter import HasUser, validate_ukrainian_phone_number
 from keyboards.keyboard import get_kb_markup, get_menu_kb
 from lexicon.lexicon import LEXICON
 from loguru import logger
@@ -53,14 +54,10 @@ async def process_fsm_cancel_order(
         )
         await session.delete(order)
         await session.commit()
-    kb = get_menu_kb(
-        has_order=state_data.get("has_order"),
-        has_operator=state_data.get("has_operator"),
-        is_admin=state_data.get("is_admin"),
-    )
-    task = state_data.get("task_wait_for_operator")
-    if task:
-        task.cancel()
+    task = [task for task in asyncio.all_tasks() if task.get_name() == "wait_operator"]
+    logger.info(task)
+    if task and task[0]:
+        task[0].cancel()
 
     chat_id = state_data["user"]["chat_id"]
     json = {
@@ -71,8 +68,13 @@ async def process_fsm_cancel_order(
     logger.info(json)
     notifier = send_message(json)
     logger.info(notifier)
+    kb = get_menu_kb(
+        has_order=state_data.get("has_order"),
+        has_operator=False,
+        is_admin=state_data.get("is_admin"),
+    )
     await state.set_state(StartData.start)
-    await state.update_data(has_order=False)
+    await state.update_data(has_order=False, has_operator=False)
     await message.answer(text=LEXICON["order_deleted"], reply_markup=kb)
 
 
@@ -147,9 +149,10 @@ async def process_fsm_confirmation(
     )
 
     if not state_data.get("has_operator"):
-        task = asyncio.create_task(wait_for_operator(message, state, session))
+        task = asyncio.create_task(
+            wait_for_operator(message, state, session), name="wait_operator"
+        )
         logger.info(task)
-        await state.update_data(task_wait_for_operator=task)
     await state.set_state(StartData.start)
     await state.update_data(has_order=True)
     await message.answer(
