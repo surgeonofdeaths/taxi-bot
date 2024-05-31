@@ -35,7 +35,7 @@ async def process_fsm_cancel(message: Message, state: FSMContext):
     kb = get_menu_kb(
         has_order=state_data.get("has_order"),
         has_operator=state_data.get("has_operator"),
-        is_admin=state_data.get("is_admin"),
+        is_admin=state_data["user"]["is_admin"],
     )
 
     await state.set_state(StartData.start)
@@ -71,7 +71,7 @@ async def process_fsm_cancel_order(
     kb = get_menu_kb(
         has_order=state_data.get("has_order"),
         has_operator=False,
-        is_admin=state_data.get("is_admin"),
+        is_admin=["user"]["is_admin"],
     )
     await state.set_state(StartData.start)
     await state.update_data(has_order=False, has_operator=False)
@@ -84,7 +84,7 @@ async def process_fsm_keep_order(message: Message, state: FSMContext):
     kb = get_menu_kb(
         has_order=True,
         has_operator=state_data.get("has_operator"),
-        is_admin=state_data.get("is_admin"),
+        is_admin=state_data["user"]["is_admin"],
     )
     await state.update_data(has_order=True)
     await state.set_state(StartData.start)
@@ -123,12 +123,12 @@ async def process_fsm_confirmation(
     text = get_order_info(state_data)
     logger.info(state_data)
 
-    user = await session.get(User, message.from_user.id)
+    user: User = await session.get(User, message.from_user.id)
     user.phone_number = state_data["phone_number"]
     await session.commit()
+    logger.info(user)
 
-    chat_id = user.chat_id
-    json = {"chat": chat_id, "text": text, "type": "message"}
+    json = {"chat": user.chat_id, "text": text, "type": "message"}
     logger.info(json)
     created_message = send_message(json)
     logger.info(created_message)
@@ -145,7 +145,7 @@ async def process_fsm_confirmation(
     kb = get_menu_kb(
         has_order=True,
         has_operator=state_data.get("has_operator"),
-        is_admin=state_data.get("is_admin"),
+        is_admin=state_data["user"]["is_admin"],
     )
 
     if not state_data.get("has_operator"):

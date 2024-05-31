@@ -31,6 +31,7 @@ class DatabaseSettings(BaseSettings):
 
 class HelpcrunchSettings(BaseSettings):
     bearer_token: str
+    request_api_wait: int
 
 
 class Settings(BaseSettings):

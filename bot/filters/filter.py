@@ -82,7 +82,7 @@ async def check_admin(session: AsyncSession, message: Message, user_data: dict) 
             await session.commit()
             return user.admin
     else:
-        return user_data.get("is_admin")
+        return user_data["is_admin"]
 
 
 if __name__ == "__main__":

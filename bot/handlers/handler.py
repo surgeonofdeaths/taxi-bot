@@ -27,14 +27,18 @@ from bot.filters.filter import check_admin
 router = Router()
 
 
-@router.message(StateFilter(None), Command(commands=["start"]))
-@router.message(StartData.start, Command(commands=["start"]))
+# @router.message(StateFilter(None), Command(commands=["start"]))
+# @router.message(StartData.start, Command(commands=["start"]))
+@router.message(Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
+    await state.clear()
+    logger.info(await state.get_data())
     state_data = await set_main_state(message, session, state)
+    logger.info(state_data)
 
-    has_operator = state_data.get("has_operator")
-    is_admin = state_data.get("is_admin")
-    has_order = state_data.get("has_order")
+    has_operator = state_data["has_operator"]
+    is_admin = state_data["user"]["is_admin"]
+    has_order = state_data["has_order"]
 
     kb = get_menu_kb(
         has_order=has_order,
@@ -43,7 +47,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     )
     await state.set_state(StartData.start)
     await message.answer(
-        LEXICON.get("command_start"),
+        LEXICON["command_start"],
         reply_markup=kb,
     )
 

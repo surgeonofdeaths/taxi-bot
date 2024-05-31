@@ -2,6 +2,7 @@ import asyncio
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
+from config.config import settings
 from db.models import Order
 from keyboards.keyboard import get_menu_kb
 from lexicon.lexicon import LEXICON
@@ -43,7 +44,7 @@ async def wait_for_operator(
             kb = get_menu_kb(
                 [contact_btn],
                 has_order=True,
-                is_admin=state_data.get("user").get("is_admin"),
+                is_admin=state_data["user"]["is_admin"],
             )
 
             await state.set_state(StartData.start)
@@ -52,7 +53,7 @@ async def wait_for_operator(
             await message.answer(text=LEXICON.get("found_operator"), reply_markup=kb)
             break
         else:
-            await asyncio.sleep(5)
+            await asyncio.sleep(settings.helpcrunch.request_api_wait)
 
 
 async def get_replies_from_operator(
@@ -73,4 +74,4 @@ async def get_replies_from_operator(
             for recent_message in recent_messages
         ]
         await state.update_data(recent_message_id=messages[0]["id"])
-        await asyncio.sleep(5)
+        await asyncio.sleep(settings.helpcrunch.request_api_wait)
