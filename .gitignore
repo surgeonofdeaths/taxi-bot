@@ -1,6 +1,6 @@
 # bot/config/config.json
 .env
-
+./pyrightconfig.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
