@@ -1,13 +1,17 @@
-from aiogram.utils.keyboard import (InlineKeyboardBuilder,
-                                    InlineKeyboardButton, InlineKeyboardMarkup,
-                                    KeyboardBuilder, KeyboardButton,
-                                    ReplyKeyboardBuilder, ReplyKeyboardMarkup)
+from aiogram.utils.keyboard import (
+    InlineKeyboardBuilder,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardBuilder,
+    KeyboardButton,
+    ReplyKeyboardBuilder,
+    ReplyKeyboardMarkup,
+)
 from lexicon.lexicon import LEXICON
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.keyboards.factory_kb import (AdminCallbackFactory,
-                                      LexiconCallbackFactory)
+from bot.keyboards.factory_kb import AdminCallbackFactory, LexiconCallbackFactory
 from bot.services.db_service import get_admin_users
 
 

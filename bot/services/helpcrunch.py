@@ -69,6 +69,7 @@ def create_chat(customer_id: int, application: int = 1):
         "customer": customer_id,
         "application": application,
     }
+    logger.info(body)
     url = build_url(URL, "chats")
     request = request_url(url, HEADERS, method="post", json=body)
     return request
@@ -76,10 +77,11 @@ def create_chat(customer_id: int, application: int = 1):
 
 def get_or_create_chat(user_id: str, customer_id: int, application: int = 1):
     chat = search_chat(user_id)
-    logger.info(customer_id)
-    logger.info(chat)
     if not chat["data"]:
         chat = create_chat(customer_id, application)
+        logger.info(chat)
+    else:
+        chat = chat["data"][0]
         logger.info(chat)
     return chat
 
@@ -136,9 +138,7 @@ async def get_user_state(
             )
         customer_id = customer["data"][0]["id"]
         logger.info(type(customer_id))
-        chat = get_or_create_chat(message.from_user.id, str(message.from_user.id))[
-            "data"
-        ][0]
+        chat = get_or_create_chat(message.from_user.id, customer_id)
         logger.info(chat)
         chat_id = chat["id"]
 

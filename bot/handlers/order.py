@@ -69,9 +69,9 @@ async def process_fsm_cancel_order(
     notifier = send_message(json)
     logger.info(notifier)
     kb = get_menu_kb(
-        has_order=state_data.get("has_order"),
+        has_order=state_data["has_order"],
         has_operator=False,
-        is_admin=["user"]["is_admin"],
+        is_admin=state_data["user"]["is_admin"],
     )
     await state.set_state(StartData.start)
     await state.update_data(has_order=False, has_operator=False)
