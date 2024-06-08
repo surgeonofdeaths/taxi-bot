@@ -12,18 +12,10 @@ from bot.services.other import check_for_operator
 async def set_main_state(
     message: Message, session: AsyncSession, state: FSMContext
 ) -> dict:
-    # user = state_data.get("user")
-    # has_operator = state_data.get("has_operator")
-    # has_order = state_data.get("has_order")
-    # is_admin = state_data.get("is_admin")
-
     has_order = bool(await get_unprocessed_order(message.from_user.id, session))
     has_operator = check_for_operator(message.from_user.id)
 
     user_state = await get_user_state(message, session)
-
-    # if not has_operator:
-    #     has_operator = check_for_operator(message.from_user.id)
 
     await state.update_data(
         user=user_state,

@@ -130,14 +130,18 @@ async def get_user_state(
     is_admin = await check_admin(session, message, user_dict)
     user_dict["is_admin"] = is_admin
     if not user_dict.get("customer_id"):
+        # TODO: get_or_create_customer
         customer = get_customer(message.from_user.id)
         logger.info(customer)
         if customer and not customer.get("data"):
             customer = create_customer(
                 message.from_user.id, message.from_user.full_name
             )
-        customer_id = customer["data"][0]["id"]
-        logger.info(type(customer_id))
+            logger.info(customer)
+            customer_id = customer["id"]
+        else:
+            logger.info(customer)
+            customer_id = customer["data"][0]["id"]
         chat = get_or_create_chat(message.from_user.id, customer_id)
         logger.info(chat)
         chat_id = chat["id"]
@@ -145,7 +149,7 @@ async def get_user_state(
         filter = get_user_filter(
             user=message.from_user,
             chat_id=chat_id,
-            customer_id=customer["data"][0]["id"],
+            customer_id=customer_id,
         )
         logger.info(filter)
         user = await get_or_create(

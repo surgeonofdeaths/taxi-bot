@@ -3,6 +3,7 @@ from operator import call
 
 from aiogram import F, Router
 from aiogram.filters import Command
+from aiogram.filters.logic import or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
@@ -35,9 +36,12 @@ from bot.db.models import User
 router = Router()
 
 
-@router.message(StartData.start, IsAdmin(), Command(commands=["admin"]))
-@router.message(StartData.start, IsAdmin(), F.text == LEXICON["command_admin"])
-async def cmd_admin(message: Message, state: FSMContext, session: AsyncSession):
+@router.message(
+    StartData.start,
+    IsAdmin(),
+    or_f(Command(commands=["admin"]), F.text == LEXICON["command_admin"]),
+)
+async def cmd_admin(message: Message, state: FSMContext):
     kb = get_admin_menu_kb()
     await message.answer(text=LEXICON["command_admin"], reply_markup=kb)
 

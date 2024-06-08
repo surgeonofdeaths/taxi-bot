@@ -22,24 +22,23 @@ class IsAdmin(BaseFilter):
         message: Message,
         state: FSMContext,
     ) -> bool:
-        if self.is_admin:
-            return self.is_admin
-        state_data = await state.get_data()
-        user_state = state_data.get("user")
-        self.is_admin = (
-            user_state and user_state.get("is_admin") or user_state and self.is_admin
-        )
-        if not self.is_admin:
-            async with sessionmaker() as session:
-                user = await get_or_create(session, User, {"id": message.from_user.id})
-                if user.admin:
-                    user_data = {
-                        "is_admin": user.admin,
-                        "chat_id": user.chat_id,
-                        "customer_id": user.customer_id,
-                    }
-                    await state.update_data(user=user_data)
-        return user_state.get("is_admin") or self.is_admin or user.admin
+        # TODO: remove admin work
+
+        # if self.is_admin:
+        #     return self.is_admin
+        # state_data = await state.get_data()
+        # user_state = state_data.get("user")
+        async with sessionmaker() as session:
+            user = await get_or_create(session, User, {"id": message.from_user.id})
+            user_data = {
+                "is_admin": user.admin,
+                "chat_id": user.chat_id,
+                "customer_id": user.customer_id,
+            }
+            logger.info(user_data)
+            await state.update_data(user=user_data)
+        self.is_admin = user.admin
+        return self.is_admin
 
 
 class HasUser(BaseFilter):
@@ -76,11 +75,20 @@ async def check_admin(session: AsyncSession, message: Message, user_data: dict) 
     logger.info(user_data)
     if not user_data.get("is_admin"):
         admin_ids = settings.bot.admin_ids
-        user = await get_or_create(session, User, {"id": message.from_user.id})
-        user.admin = message.from_user.id in admin_ids
-        if user.admin:
-            await session.commit()
-            return user.admin
+        user = await get_or_create(
+            session,
+            User,
+            {
+                "id": message.from_user.id,
+                "username": message.from_user.username,
+                "first_name": message.from_user.first_name,
+                "last_name": message.from_user.last_name,
+            },
+        )
+        if not user.admin:
+            user.admin = message.from_user.id in admin_ids
+        await session.commit()
+        return user.admin
     else:
         return user_data["is_admin"]
 

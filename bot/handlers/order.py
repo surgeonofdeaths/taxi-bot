@@ -241,7 +241,12 @@ async def process_fsm_phone(message: Message, state: FSMContext, session: AsyncS
         keyboard = get_kb_markup(button_cancel)
         if message.contact:
             logger.info(message.contact.phone_number)
-            await state.update_data(phone_number=message.contact.phone_number)
+            phone_number = (
+                str(message.contact.phone_number)
+                if message.contact.phone_number.startswith("+")
+                else "+" + str(message.contact.phone_number)
+            )
+            await state.update_data(phone_number=phone_number)
         else:
             user = await session.get(User, message.from_user.id)
             logger.info(user.phone_number)

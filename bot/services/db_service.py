@@ -100,6 +100,7 @@ async def get_or_create(session: AsyncSession, model, filter: dict):
     if instance:
         return instance
     else:
+        logger.info(filter)
         instance = model(**filter)
         session.add(instance)
         await session.commit()
