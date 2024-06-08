@@ -9,14 +9,6 @@ from keyboards.keyboard import get_menu_kb
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
 from services.db_service import create_operator, get_or_create, populate_lexicon
-from services.helpcrunch import (
-    create_chat,
-    create_customer,
-    get_assignee,
-    get_customer,
-    get_user_state,
-    search_chat,
-)
 from services.other import check_for_operator, get_user_filter
 from services.state import set_main_state
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,8 +19,6 @@ from bot.filters.filter import check_admin
 router = Router()
 
 
-# @router.message(StateFilter(None), Command(commands=["start"]))
-# @router.message(StartData.start, Command(commands=["start"]))
 @router.message(Command(commands=["start"]))
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
     await state.clear()

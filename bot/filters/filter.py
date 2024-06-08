@@ -24,12 +24,17 @@ class IsAdmin(BaseFilter):
     ) -> bool:
         # TODO: remove admin work
 
-        # if self.is_admin:
-        #     return self.is_admin
-        # state_data = await state.get_data()
-        # user_state = state_data.get("user")
         async with sessionmaker() as session:
-            user = await get_or_create(session, User, {"id": message.from_user.id})
+            user = await get_or_create(
+                session,
+                User,
+                {
+                    "id": message.from_user.id,
+                    "username": message.from_user.username,
+                    "first_name": message.from_user.first_name,
+                    "last_name": message.from_user.last_name,
+                },
+            )
             user_data = {
                 "is_admin": user.admin,
                 "chat_id": user.chat_id,

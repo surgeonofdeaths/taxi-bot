@@ -26,7 +26,6 @@ async def process_fsm_conversation_start(
     session: AsyncSession,
 ):
     state_data = await state.get_data()
-    # if state_data.get("has_operator") or check_for_operator(message.from_user.id):
     if state_data.get("has_operator"):
         buttons = [
             KeyboardButton(text=LEXICON["stop_conv"]),

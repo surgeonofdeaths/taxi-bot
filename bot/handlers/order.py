@@ -11,7 +11,7 @@ from keyboards.keyboard import get_kb_markup, get_menu_kb
 from lexicon.lexicon import LEXICON
 from loguru import logger
 from services.db_service import create_order, get_or_create, get_unprocessed_order
-from services.helpcrunch import send_message
+from services.helpcrunch import create_customer, get_user_state, send_message
 from services.other import get_order_info
 from services.tasks import wait_for_operator
 from sqlalchemy.ext.asyncio import AsyncSession, async_session
@@ -125,12 +125,22 @@ async def process_fsm_confirmation(
 
     user: User = await session.get(User, message.from_user.id)
     user.phone_number = state_data["phone_number"]
-    await session.commit()
     logger.info(user)
 
     json = {"chat": user.chat_id, "text": text, "type": "message"}
     logger.info(json)
+
     created_message = send_message(json)
+    if (
+        created_message.get("errors")
+        and created_message["errors"][0]["code"] == "invalid_chat_value"
+    ):
+        user_state = await get_user_state(message, session)
+        await state.update_data(user=user_state)
+        await session.refresh(user)
+        json = {"chat": user.chat_id, "text": text, "type": "message"}
+        created_message = send_message(json)
+
     logger.info(created_message)
 
     await create_order(
@@ -153,6 +163,7 @@ async def process_fsm_confirmation(
             wait_for_operator(message, state, session), name="wait_operator"
         )
         logger.info(task)
+    await session.commit()
     await state.set_state(StartData.start)
     await state.update_data(has_order=True)
     await message.answer(

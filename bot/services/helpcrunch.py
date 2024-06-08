@@ -34,6 +34,7 @@ def get_messages(chat_id: int, message_id: int | None = None) -> dict:
 def send_message(message: dict):
     url = build_url(URL, "messages")
     request = request_url(url, HEADERS, method="post", json=message)
+
     return request
 
 
