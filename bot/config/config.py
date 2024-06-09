@@ -47,7 +47,9 @@ settings: Settings = Settings.parse_file(
 )
 
 DATABASE_PRIVATE_URL = os.getenv("DATABASE_PRIVATE_URL")
+RAILWAY_PRIVATE_DOMAIN = os.getenv("RAILWAY_PRIVATE_DOMAIN")
 logger.info(DATABASE_PRIVATE_URL)
+logger.info(RAILWAY_PRIVATE_DOMAIN)
 
 if DATABASE_PRIVATE_URL:
     logger.info(DATABASE_PRIVATE_URL)
