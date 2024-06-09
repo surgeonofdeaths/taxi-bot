@@ -47,12 +47,10 @@ settings: Settings = Settings.parse_file(
     encoding="utf-8",
 )
 
-DATABASE_PRIVATE_URL = os.getenv("DATABASE_PRIVATE_URL")
-RAILWAY_PRIVATE_DOMAIN = os.getenv("RAILWAY_PRIVATE_DOMAIN")
-home = os.getenv("HOME")
+# DATABASE_PRIVATE_URL = os.getenv("DATABASE_PRIVATE_URL")
+DATABASE_PRIVATE_URL = "postgresql://postgres:UCaIjjWYVoWcJAHwKHBavuNkrvRHQshg@postgres.railway.internal:5432/railway"
+
 logger.info(DATABASE_PRIVATE_URL)
-logger.info(RAILWAY_PRIVATE_DOMAIN)
-logger.info(home)
 
 if DATABASE_PRIVATE_URL:
     logger.info("PROD")
