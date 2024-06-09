@@ -49,14 +49,18 @@ settings: Settings = Settings.parse_file(
 
 DATABASE_PRIVATE_URL = os.getenv("DATABASE_PRIVATE_URL")
 RAILWAY_PRIVATE_DOMAIN = os.getenv("RAILWAY_PRIVATE_DOMAIN")
+home = os.getenv("HOME")
 logger.info(DATABASE_PRIVATE_URL)
 logger.info(RAILWAY_PRIVATE_DOMAIN)
+logger.info(home)
 
 if DATABASE_PRIVATE_URL:
+    logger.info("PROD")
     logger.info(DATABASE_PRIVATE_URL)
     url = "postgresql+asyncpg" + DATABASE_PRIVATE_URL.lstrip("postgresql")
     logger.info(url)
 else:
+    logger.info("DEV")
     url = (
         f"postgresql+{settings.db.drivername}://"
         f"{settings.db.user}:{settings.db.password}@"
