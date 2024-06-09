@@ -1,6 +1,6 @@
 import os
-import subprocess
 
+from loguru import logger
 from pydantic_settings import BaseSettings
 
 
@@ -45,11 +45,19 @@ settings: Settings = Settings.parse_file(
     path="bot/config/config.json",
     encoding="utf-8",
 )
-url = (
-    f"postgresql+{settings.db.drivername}://"
-    f"{settings.db.user}:{settings.db.password}@"
-    f"{settings.db.host}:{settings.db.port}"
-    f"/{settings.db.database}"
-)
-# url = "postgresql+asyncpg://postgres:JkRcVwQGYWhyJWmsuWjTQfknRgXwEkKI@roundhouse.proxy.rlwy.net:14075/railway"
+
+DATABASE_PRIVATE_URL = os.getenv("DATABASE_PRIVATE_URL")
+logger.info(DATABASE_PRIVATE_URL)
+
+if DATABASE_PRIVATE_URL:
+    logger.info(DATABASE_PRIVATE_URL)
+    url = "postgresql+asyncpg" + DATABASE_PRIVATE_URL.lstrip("postgresql")
+    logger.info(url)
+else:
+    url = (
+        f"postgresql+{settings.db.drivername}://"
+        f"{settings.db.user}:{settings.db.password}@"
+        f"{settings.db.host}:{settings.db.port}"
+        f"/{settings.db.database}"
+    )
 settings.db.url = url
