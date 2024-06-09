@@ -54,7 +54,6 @@ logger.info(DATABASE_PRIVATE_URL)
 
 if DATABASE_PRIVATE_URL:
     logger.info("PROD")
-    logger.info(DATABASE_PRIVATE_URL)
     url = "postgresql+asyncpg" + DATABASE_PRIVATE_URL.lstrip("postgresql")
     logger.info(url)
 else:
@@ -65,4 +64,6 @@ else:
         f"{settings.db.host}:{settings.db.port}"
         f"/{settings.db.database}"
     )
+url = "postgresql+asyncpg://postgres:UCaIjjWYVoWcJAHwKHBavuNkrvRHQshg@postgres.railway.internal:5432/railway"
+logger.info(url)
 settings.db.url = url
