@@ -13,16 +13,6 @@ from bot.states.state import StartData
 router = Router()
 
 
-@router.message(Command(commands=["reboot"]))
-async def process_bot_reboot(message: Message, state: FSMContext):
-    #  TODO: more elegant way to set state after reboot without "/start" command
-    logger.info("Reboot")
-    logger.info("Previous state:")
-    logger.info(await state.get_data())
-    await state.clear()
-    await message.reply(text="Повторите запрос! Бот был перезапущен.")
-
-
 @router.message()
 async def process_wrong_text(
     message: Message, state: FSMContext, session: AsyncSession
@@ -32,17 +22,6 @@ async def process_wrong_text(
     state_data = await state.get_data()
     logger.info(state_state)
     logger.info(state_data)
-
-    # if message.text in (LEXICON["command_admin"], "/admin"):
-    #     is_admin = False
-    #
-    # if message.text in (LEXICON["command_contact"], "/contact"):
-    #     has_operator = False
-    #
-    # kb = get_menu_kb(
-    #     has_operator=has_operator,
-    #     is_admin=is_admin,
-    # )
 
     logger.info(await state.get_data())
     state_data = await set_main_state(message, session, state)

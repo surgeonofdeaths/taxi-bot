@@ -88,6 +88,7 @@ async def process_fsm_stop_conversation(
         has_operator=state_data.get("has_operator"),
         is_admin=state_data["user"]["is_admin"],
     )
+    logger.info("get_replies_from_operator: END")
     await message.answer(text=LEXICON["conv_stopped"], reply_markup=kb)
 
 

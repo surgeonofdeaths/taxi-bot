@@ -48,7 +48,6 @@ settings: Settings = Settings.parse_file(
 )
 
 # DATABASE_PRIVATE_URL = os.getenv("DATABASE_PRIVATE_URL")
-# DATABASE_PRIVATE_URL = "postgresql://postgres:UCaIjjWYVoWcJAHwKHBavuNkrvRHQshg@postgres.railway.internal:5432/railway"
 DATABASE_PRIVATE_URL = "postgresql://postgres:UCaIjjWYVoWcJAHwKHBavuNkrvRHQshg@viaduct.proxy.rlwy.net:28877/railway"
 
 logger.info(DATABASE_PRIVATE_URL)
