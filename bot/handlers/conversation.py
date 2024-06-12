@@ -1,16 +1,12 @@
 import asyncio
 
 from aiogram import F, Router
-from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
-from db.models import User
 from keyboards.keyboard import get_kb_markup, get_menu_kb
 from lexicon.lexicon import LEXICON, LEXICON_DB
 from loguru import logger
-from services.db_service import create_order
 from services.helpcrunch import send_message
-from services.other import check_for_operator, get_recent_messages_from_operator
 from services.tasks import get_replies_from_operator
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import Conversation, StartData
