@@ -1,6 +1,7 @@
 import asyncio
 
 from aiogram import F, Router
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
 from keyboards.keyboard import get_kb_markup, get_menu_kb
