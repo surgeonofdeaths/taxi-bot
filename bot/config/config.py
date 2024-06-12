@@ -47,11 +47,11 @@ settings: Settings = Settings.parse_file(
     encoding="utf-8",
 )
 
-load_dotenv()
-DATABASE_PRIVATE_URL = os.getenv("DATABASE_PRIVATE_URL")
-# DATABASE_PRIVATE_URL = "postgresql://postgres:UCaIjjWYVoWcJAHwKHBavuNkrvRHQshg@viaduct.proxy.rlwy.net:28877/railway"
+# load_dotenv()
+# DATABASE_PRIVATE_URL = os.getenv("DATABASE_PRIVATE_URL")
+DATABASE_PRIVATE_URL = "postgresql://postgres:UCaIjjWYVoWcJAHwKHBavuNkrvRHQshg@viaduct.proxy.rlwy.net:28877/railway"
 
-logger.info(DATABASE_PRIVATE_URL)
+# logger.info(DATABASE_PRIVATE_URL)
 
 if DATABASE_PRIVATE_URL:
     logger.info("PROD")
