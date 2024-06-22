@@ -1,11 +1,13 @@
-from aiogram.utils.keyboard import (
-    InlineKeyboardBuilder,
+from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    KeyboardBuilder,
     KeyboardButton,
-    ReplyKeyboardBuilder,
     ReplyKeyboardMarkup,
+)
+from aiogram.utils.keyboard import (
+    InlineKeyboardBuilder,
+    KeyboardBuilder,
+    ReplyKeyboardBuilder,
 )
 from lexicon.lexicon import LEXICON
 from loguru import logger
@@ -125,14 +127,3 @@ async def get_admins_kb(session: AsyncSession) -> InlineKeyboardMarkup:
     )
     kb = kb.as_markup(resize_keyboard=True)
     return kb
-
-
-# def form_buttons(*text: tuple[str]) -> list[KeyboardButton]:
-#     KeyboardButton(text=t, )
-#     buttons = [
-#         KeyboardButton(
-#             text=LEXICON.get("contact"),
-#             request_contact=True,
-#         )
-#     ]
-#     return buttons

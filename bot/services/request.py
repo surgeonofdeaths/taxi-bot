@@ -1,18 +1,14 @@
-import asyncio
-
 import requests
-from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardMarkup
-from lexicon.lexicon import LEXICON
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def build_url(*parts):
     return "/".join(s.strip("/") for s in parts)
 
 
-def request_by_method(url, headers, method: str = "get", json: dict | None = None):
+def request_by_method(
+    url, headers, method: str = "get", json: dict | None = None
+) -> requests.Response:
     response = None
 
     if method.lower() == "get":

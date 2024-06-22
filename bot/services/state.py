@@ -3,7 +3,6 @@ from aiogram.types import Message
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.filters.filter import check_admin
 from bot.services.db_service import get_unprocessed_order
 from bot.services.helpcrunch import get_user_state
 from bot.services.other import check_for_operator

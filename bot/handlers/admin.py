@@ -1,21 +1,8 @@
-import asyncio
-from operator import call
-
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.filters.logic import or_f
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    CallbackQuery,
-    KeyboardButton,
-    Message,
-    message_auto_delete_timer_changed,
-)
-from aiogram.utils.keyboard import (
-    InlineKeyboardBuilder,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
+from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 from config.config import settings
 from filters.filter import IsAdmin, get_clean_username
 from keyboards.factory_kb import AdminCallbackFactory, LexiconCallbackFactory
@@ -25,7 +12,7 @@ from keyboards.keyboard import (
     get_admins_kb,
     get_lexicon_objs_kb,
 )
-from lexicon.lexicon import LEXICON, LEXICON_DB
+from lexicon.lexicon import LEXICON
 from loguru import logger
 from services.db_service import check_if_model_exists, get_or_create, update_lexicon_obj
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,15 +28,13 @@ router = Router()
     IsAdmin(),
     or_f(Command(commands=["admin"]), F.text == LEXICON["command_admin"]),
 )
-async def cmd_admin(message: Message, state: FSMContext):
+async def cmd_admin(message: Message):
     kb = get_admin_menu_kb()
     await message.answer(text=LEXICON["command_admin"], reply_markup=kb)
 
 
 @router.callback_query(StartData.start, IsAdmin(), F.data == "get_lexicon")
-async def process_lexicon_btn(
-    callback: CallbackQuery, state: FSMContext, session: AsyncSession
-):
+async def process_lexicon_btn(callback: CallbackQuery):
     kb = get_lexicon_objs_kb()
     await callback.message.edit_text(text=LEXICON["lexicon_list"], reply_markup=kb)
 
@@ -57,9 +42,7 @@ async def process_lexicon_btn(
 @router.callback_query(
     StartData.start, IsAdmin(), LexiconCallbackFactory.filter(F.action == "return")
 )
-async def process_return_btn(
-    callback: CallbackQuery, state: FSMContext, session: AsyncSession
-):
+async def process_return_btn(callback: CallbackQuery):
     kb = get_admin_menu_kb()
     await callback.message.edit_text(text=LEXICON["command_admin"], reply_markup=kb)
 
@@ -73,7 +56,6 @@ async def process_return_btn(
 async def process_lexicon_obj(
     callback: CallbackQuery,
     state: FSMContext,
-    session: AsyncSession,
 ):
     logger.info(callback.data)
     logger.info(type(callback.data))
@@ -107,7 +89,6 @@ async def process_lexicon_obj(
 async def process_change_lexicon_obj(
     callback: CallbackQuery,
     state: FSMContext,
-    session: AsyncSession,
 ):
     logger.info("change")
     state_data = await state.get_data()
@@ -123,7 +104,6 @@ async def process_change_lexicon_obj(
 async def process_fsm_lexicon_confirmation(
     message: Message,
     state: FSMContext,
-    session: AsyncSession,
 ):
     await state.update_data(lexicon_text=message.text)
     state_data = await state.get_data()
@@ -194,16 +174,15 @@ async def process_fsm_lexicon_decline(
 
 
 @router.callback_query(StartData.start, IsAdmin(), F.data == "get_admins")
-async def process_admin_btn(
-    callback: CallbackQuery, state: FSMContext, session: AsyncSession
-):
+async def process_admin_btn(callback: CallbackQuery, session: AsyncSession):
     kb = await get_admins_kb(session)
     await callback.message.edit_text(text=LEXICON["admin_list"], reply_markup=kb)
 
 
 @router.callback_query(StartData.start, IsAdmin(), F.data == "admin_add")
 async def process_admin_add(
-    callback: CallbackQuery, state: FSMContext, session: AsyncSession
+    callback: CallbackQuery,
+    state: FSMContext,
 ):
     btns = [
         [
@@ -227,7 +206,6 @@ async def process_admin_adding_cancel(
     await callback.message.edit_text(text=LEXICON["admin_list"], reply_markup=kb)
 
 
-# @router.callback_query(Admin.confirmation, IsAdmin(), F.data == "admin_add_user")
 @router.message(Admin.confirmation, IsAdmin())
 async def process_admin_user(
     message: Message, state: FSMContext, session: AsyncSession
@@ -271,8 +249,6 @@ async def process_admin_user(
 async def process_admin_obj(
     query: CallbackQuery,
     callback_data: AdminCallbackFactory,
-    state: FSMContext,
-    session: AsyncSession,
 ):
     btns = [
         [

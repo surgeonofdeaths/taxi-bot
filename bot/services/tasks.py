@@ -39,7 +39,6 @@ async def wait_for_operator(
                 orders = select(Order).order_by(Order.id.desc())
                 result = await session.execute(orders)
                 order = result.first()[0]
-                # logger.info(order)
                 order.operator_id = assignee["id"]
 
                 contact_btn = KeyboardButton(text=LEXICON.get("command_contact"))
@@ -65,9 +64,7 @@ async def wait_for_operator(
         logger.info("wait_for_operator: ERROR")
 
 
-async def get_replies_from_operator(
-    message: Message, state: FSMContext, session: AsyncSession
-) -> None:
+async def get_replies_from_operator(message: Message, state: FSMContext) -> None:
     logger.info("get_replies_from_operator: STARTING")
 
     try:

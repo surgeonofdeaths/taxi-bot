@@ -39,7 +39,7 @@ async def process_fsm_conversation_start(
 
         created_message = send_message(json)
 
-        task = asyncio.create_task(
+        asyncio.create_task(
             get_replies_from_operator(message, state, session),
             name="replies_from_operator",
         )
@@ -58,7 +58,6 @@ async def process_fsm_conversation_start(
 async def process_fsm_stop_conversation(
     message: Message,
     state: FSMContext,
-    session: AsyncSession,
 ):
     await state.set_state(StartData.start)
     state_data = await state.get_data()
@@ -93,7 +92,6 @@ async def process_fsm_stop_conversation(
 async def process_fsm_conversation(
     message: Message,
     state: FSMContext,
-    session: AsyncSession,
 ):
     state_data = await state.get_data()
     chat_id = state_data["user"]["chat_id"]

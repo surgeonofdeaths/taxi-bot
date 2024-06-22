@@ -1,16 +1,5 @@
-import asyncio
-
-from aiogram.fsm.context import FSMContext
-from aiogram.types import KeyboardButton, Message
-from db.models import Order, User
-from keyboards.keyboard import get_menu_kb
-from lexicon.lexicon import LEXICON
 from loguru import logger
-from services.db_service import create_operator
-from services.helpcrunch import get_assignee, get_messages, search_chat, search_customer
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from states.state import Conversation, StartData
+from services.helpcrunch import get_assignee, search_chat, search_customer
 
 
 def check_for_operator(telegram_id: int) -> None | dict:

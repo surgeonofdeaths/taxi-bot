@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from aiogram.types import Message
 from config.config import settings
 from loguru import logger
@@ -19,16 +17,12 @@ HEADERS = {
 }
 
 
-def get_messages(chat_id: int, message_id: int | None = None) -> dict:
+def get_messages(chat_id: int) -> dict:
     url = build_url(URL, "chats", str(chat_id), "messages")
 
     request = request_url(url, HEADERS, method="get")
-    # message = request["data"][0]
     messages = request.get("data")
     return messages
-    # if not request.get("errors") and message_id:
-    #     # latest
-    # return request
 
 
 def send_message(message: dict):
@@ -131,7 +125,6 @@ async def get_user_state(
     is_admin = await check_admin(session, message, user_dict)
     user_dict["is_admin"] = is_admin
     if not user_dict.get("customer_id"):
-        # TODO: get_or_create_customer
         customer = get_customer(message.from_user.id)
         logger.info(customer)
         if customer and not customer.get("data"):
@@ -170,15 +163,12 @@ async def get_user_state(
 
 def get_user_filter(**kwargs) -> dict:
     user = kwargs["user"]
-    # customer_id = kwargs["customer_id"]
     username = user.username if user.username else "no_username"
     filter = {}
     filter["id"] = user.id
     filter["username"] = username
     filter["first_name"] = user.first_name
     filter["last_name"] = user.last_name
-    # filter["customer_id"] = str(customer_id)
-    # filter["chat_id"] = str(kwargs["chat_id"])
     return filter
 
 

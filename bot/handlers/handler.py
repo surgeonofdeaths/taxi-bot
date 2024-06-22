@@ -1,20 +1,13 @@
 from aiogram import F, Router
-from aiogram.filters import Command, StateFilter
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from aiogram.utils.keyboard import KeyboardButton
-from config.config import settings
-from db.models import User
 from keyboards.keyboard import get_menu_kb
-from lexicon.lexicon import LEXICON, LEXICON_DB
+from lexicon.lexicon import LEXICON
 from loguru import logger
-from services.db_service import create_operator, get_or_create, populate_lexicon
-from services.other import check_for_operator, get_user_filter
 from services.state import set_main_state
 from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import StartData
-
-from bot.filters.filter import check_admin
 
 router = Router()
 
@@ -44,7 +37,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
 
 @router.message(StartData.start, Command(commands=["help"]))
 @router.message(StartData.start, F.text == LEXICON["command_help"])
-async def cmd_help(message: Message, state: FSMContext, session: AsyncSession):
+async def cmd_help(message: Message):
     await message.answer(
         text=LEXICON["help"],
     )

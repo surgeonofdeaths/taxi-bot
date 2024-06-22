@@ -1,5 +1,4 @@
 from aiogram import Router
-from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from lexicon.lexicon import LEXICON

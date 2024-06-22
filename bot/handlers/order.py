@@ -6,15 +6,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
 from db.models import Order as OrderModel
 from db.models import User
-from filters.filter import HasUser, validate_ukrainian_phone_number
+from filters.filter import validate_ukrainian_phone_number
 from keyboards.keyboard import get_kb_markup, get_menu_kb
 from lexicon.lexicon import LEXICON
 from loguru import logger
 from services.db_service import create_order, get_or_create, get_unprocessed_order
-from services.helpcrunch import create_customer, get_user_state, send_message
+from services.helpcrunch import get_user_state, send_message
 from services.other import get_order_info
 from services.tasks import wait_for_operator
-from sqlalchemy.ext.asyncio import AsyncSession, async_session
+from sqlalchemy.ext.asyncio import AsyncSession
 from states.state import Order, StartData
 
 router = Router()
@@ -173,9 +173,7 @@ async def process_fsm_confirmation(
 
 
 @router.message(Order.confirmation)
-async def process_fsm_fail_confirmation(
-    message: Message, state: FSMContext, session: AsyncSession
-):
+async def process_fsm_fail_confirmation(message: Message):
     button_cancel = KeyboardButton(text=LEXICON.get("stop_order"))
     button_confirm = KeyboardButton(text=LEXICON.get("confirm"))
     keyboard = get_kb_markup(button_confirm, button_cancel)
@@ -322,7 +320,6 @@ async def process_fsm_destination_address(message: Message, state: FSMContext):
 async def process_fsm_note(
     message: Message,
     state: FSMContext,
-    session: AsyncSession,
 ):
     if not message.text == LEXICON["no_note"]:
         await state.update_data(note=message.text)

@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime
 
 from sqlalchemy import (
@@ -16,7 +15,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy_utils import EmailType
 
 from .base import Base
-from .database import engine
 
 
 class User(Base):
@@ -82,12 +80,3 @@ class Lexicon(Base):
 
     key = Column(String, primary_key=True)
     text = Column(String)
-
-
-# async def init_models():
-#     async with engine.begin() as conn:
-#         await conn.run_sync(Base.metadata.drop_all)
-#         await conn.run_sync(Base.metadata.create_all)
-
-
-# asyncio.run(init_models())
