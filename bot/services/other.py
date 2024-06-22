@@ -1,3 +1,4 @@
+from db.models import Order
 from loguru import logger
 from services.helpcrunch import get_assignee, search_chat, search_customer
 
