@@ -40,7 +40,7 @@ async def process_fsm_conversation_start(
         created_message = send_message(json)
 
         asyncio.create_task(
-            get_replies_from_operator(message, state, session),
+            get_replies_from_operator(message, state),
             name="replies_from_operator",
         )
         await state.update_data(recent_message_id=created_message["id"])

@@ -61,7 +61,7 @@ async def wait_for_operator(
                 await asyncio.sleep(settings.helpcrunch.request_api_wait)
     except (ClientOSError, TelegramNetworkError):
         await state.set_state(StartData.start)
-        logger.info("wait_for_operator: ERROR")
+        logger.error("wait_for_operator: ERROR")
 
 
 async def get_replies_from_operator(message: Message, state: FSMContext) -> None:
@@ -91,4 +91,4 @@ async def get_replies_from_operator(message: Message, state: FSMContext) -> None
         )
         await message.answer(text=LEXICON["conv_stopped"], reply_markup=kb)
         await state.set_state(StartData.start)
-        logger.info("get_replies_from_operator: ERROR")
+        logger.error("get_replies_from_operator: ERROR")
