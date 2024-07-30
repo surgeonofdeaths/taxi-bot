@@ -1,16 +1,12 @@
 # Taxi Bot
 
 ![python](https://img.shields.io/badge/python-3.11-blue?style=flat-square)
-![aiogram](https://img.shields.io/badge/aiogram%20-orange?style=flat-square)
-![pydantic](https://img.shields.io/badge/pydantic%20-orange?style=flat-square)
-![loguru](https://img.shields.io/badge/loguru%20-orange?style=flat-square)
-![alembic](https://img.shields.io/badge/alembic%20-orange?style=flat-square)
-![sqlalchemy](https://img.shields.io/badge/sqlalchemy%20-orange?style=flat-square)
-![postgres](https://img.shields.io/badge/postgres%20-orange?style=flat-square)
-![redis](https://img.shields.io/badge/redis%20-orange?style=flat-square)
-![docker](https://img.shields.io/badge/docker%20-orange?style=flat-square)
-![docker-compose](https://img.shields.io/badge/docker-compose%20-orange?style=flat-square)
-![helpcruch](https://img.shields.io/badge/helpcruch%20-orange?style=flat-square)
+![aiogram](https://img.shields.io/badge/aiogram-^3.4.1%20-orange?style=flat-square)
+![pydantic](https://img.shields.io/badge/pydantic-^2.3.0%20-orange?style=flat-square)
+![loguru](https://img.shields.io/badge/loguru-^0.7.2%20-orange?style=flat-square)
+![alembic](https://img.shields.io/badge/alembic-^1.13.1%20-orange?style=flat-square)
+![sqlalchemy](https://img.shields.io/badge/sqlalchemy-^2.0.29%20-orange?style=flat-square)
+![redis](https://img.shields.io/badge/redis-^5.0.4%20-orange?style=flat-square)
 
 ## Table of contents
 
